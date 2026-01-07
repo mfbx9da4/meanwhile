@@ -51,15 +51,22 @@ function calculateGrid(totalDays: number, width: number, height: number): { cols
   return { cols: bestCols, rows: bestRows }
 }
 
+const getViewportSize = () => ({
+  width: window.visualViewport?.width ?? window.innerWidth,
+  height: window.visualViewport?.height ?? window.innerHeight,
+})
+
 export function App() {
-  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight })
+  const [windowSize, setWindowSize] = useState(getViewportSize)
 
   useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight })
-    }
+    const handleResize = () => setWindowSize(getViewportSize())
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    window.visualViewport?.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.visualViewport?.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   const today = new Date()
