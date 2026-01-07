@@ -140,6 +140,8 @@ export function App() {
   const timeRemaining = weeksRemaining > 0
     ? `${weeksRemaining} week${weeksRemaining !== 1 ? 's' : ''}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? 's' : ''}` : ''} to go`
     : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`
+  const currentWeek = Math.floor((daysPassed - 1) / 7) + 1
+  const currentDayInWeek = ((daysPassed - 1) % 7) + 1
   const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1)
 
   return (
@@ -162,6 +164,7 @@ export function App() {
         ))}
       </div>
       <div class="info">
+        <span>Week {currentWeek}, Day {currentDayInWeek}</span>
         <span>{daysPassed} / {totalDays} days</span>
         <span>{progressPercent}%</span>
         <span>{timeRemaining}</span>
