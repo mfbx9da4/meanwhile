@@ -11,5 +11,8 @@ html, body, #app {
 }
 
 body {
-  background: #f5f5f5;
+  background: #f2f2f7;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

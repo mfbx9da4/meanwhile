@@ -76,6 +76,19 @@ export function App() {
 
   const { cols, rows } = useMemo(() => calculateGrid(totalDays, windowSize.width, windowSize.height), [totalDays, windowSize])
 
+  const cellSize = useMemo(() => {
+    const availableWidth = windowSize.width - 16 // padding
+    const availableHeight = windowSize.height - 50 // padding + info bar
+    const cellWidth = availableWidth / cols
+    const cellHeight = availableHeight / rows
+    return Math.min(cellWidth, cellHeight)
+  }, [windowSize, cols, rows])
+
+  const fontSize = useMemo(() => {
+    const base = cellSize * 0.16
+    return Math.max(7, Math.min(base, 13))
+  }, [cellSize])
+
   const days = useMemo(() => {
     return Array.from({ length: totalDays }, (_, i) => {
       const date = addDays(START_DATE, i)
@@ -96,6 +109,7 @@ export function App() {
         passed: i < daysPassed,
         isDiscovery: i === discoveryDay,
         isAnnouncement: i === announcementDay,
+        isEngagement: i === engagementPartyDay,
         isDueDate: i === totalDays - 1,
         isToday: i === daysPassed - 1,
         isWeekStart: i % 7 === 0,
@@ -120,10 +134,10 @@ export function App() {
         {days.map((day) => (
           <div
             key={day.index}
-            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''}`}
+            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''}`}
           >
-            <span class="date-label">{day.dateLabel}</span>
-            {day.annotation && <span class="annotation">{day.annotation}</span>}
+            <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
+            {day.annotation && <span class="annotation" style={{ fontSize: `${fontSize}px` }}>{day.annotation}</span>}
           </div>
         ))}
       </div>
