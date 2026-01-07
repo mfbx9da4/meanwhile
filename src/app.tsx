@@ -134,7 +134,12 @@ export function App() {
     })
   }, [totalDays, daysPassed, discoveryDay, hospitalScanDay, drRodinDay, tenWeekScanDay, announcementDay])
 
-  const weeksRemaining = Math.ceil((totalDays - daysPassed) / 7)
+  const daysRemaining = totalDays - daysPassed
+  const weeksRemaining = Math.floor(daysRemaining / 7)
+  const extraDays = daysRemaining % 7
+  const timeRemaining = weeksRemaining > 0
+    ? `${weeksRemaining} week${weeksRemaining !== 1 ? 's' : ''}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? 's' : ''}` : ''} to go`
+    : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`
   const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1)
 
   return (
@@ -159,7 +164,7 @@ export function App() {
       <div class="info">
         <span>{daysPassed} / {totalDays} days</span>
         <span>{progressPercent}%</span>
-        <span>{weeksRemaining} weeks to go</span>
+        <span>{timeRemaining}</span>
       </div>
     </div>
   )
