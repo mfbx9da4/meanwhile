@@ -67,6 +67,12 @@
 
 .day.today {
   box-shadow: 0 0 0 2px #2d5a3d;
+  animation: pulse-border 4s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 2px #2d5a3d; }
+  50% { box-shadow: 0 0 0 2px #7dcea0; }
 }
 
 .date-label {
