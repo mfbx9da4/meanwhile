@@ -30,6 +30,10 @@ function formatDate(date: Date): string {
 
 function calculateGrid(totalDays: number, width: number, height: number): { cols: number; rows: number } {
   // Minimize empty slots (dead space), with tie-breaker for squarest cells
+  // Aspect ratio must be between 0.5 and 2.0 (not too tall/thin)
+  const MIN_ASPECT = 0.5
+  const MAX_ASPECT = 2.0
+
   let bestCols = 1
   let bestRows = totalDays
   let bestEmpty = totalDays - 1
@@ -37,8 +41,12 @@ function calculateGrid(totalDays: number, width: number, height: number): { cols
 
   for (let cols = 1; cols <= totalDays; cols++) {
     const rows = Math.ceil(totalDays / cols)
-    const empty = cols * rows - totalDays
     const cellAspect = (width / cols) / (height / rows)
+
+    // Skip configurations with extreme aspect ratios
+    if (cellAspect < MIN_ASPECT || cellAspect > MAX_ASPECT) continue
+
+    const empty = cols * rows - totalDays
     const aspectDiff = Math.abs(cellAspect - 1)
 
     if (empty < bestEmpty || (empty === bestEmpty && aspectDiff < bestAspectDiff)) {
