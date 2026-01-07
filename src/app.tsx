@@ -149,7 +149,7 @@ export function App() {
         {days.map((day) => (
           <div
             key={day.index}
-            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''}`}
+            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''} ${day.isToday ? 'today' : ''}`}
           >
             <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
             {day.annotation && <span class="annotation" style={{ fontSize: `${fontSize}px` }}>{day.annotation}</span>}
