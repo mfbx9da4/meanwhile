@@ -114,7 +114,7 @@ const getViewportSize = () => ({
   height: window.visualViewport?.height ?? window.innerHeight,
 })
 
-const VERSION_TAP_COUNT = 4
+const VERSION_TAP_COUNT = 3
 const VERSION_TAP_TIMEOUT = 500
 
 type ViewMode = 'grid' | 'calendar'
@@ -518,8 +518,8 @@ function CalendarView({
             <div
               class="calendar-grid"
               style={{
-                gridTemplateColumns: `repeat(${totalWeeks}, ${cellSize}px)`,
-                gridTemplateRows: `repeat(7, ${cellSize}px)`,
+                gridTemplateColumns: `repeat(${totalWeeks}, 1fr)`,
+                gridTemplateRows: `repeat(7, 1fr)`,
                 gap: `${gap}px`,
               }}
             >
@@ -598,8 +598,8 @@ function CalendarView({
           <div
             class="calendar-grid"
             style={{
-              gridTemplateColumns: `repeat(7, ${cellSize}px)`,
-              gridTemplateRows: `repeat(${totalWeeks}, ${cellSize}px)`,
+              gridTemplateColumns: `repeat(7, 1fr)`,
+              gridTemplateRows: `repeat(${totalWeeks}, 1fr)`,
               gap: `${gap}px`,
             }}
           >
@@ -751,7 +751,7 @@ function VersionPopover({ onClose }: { onClose: () => void }) {
         </div>
         <div class="version-row">
           <span class="version-label">Date</span>
-          <span class="version-value">{__GIT_DATE__}{timeAgo && ` (${timeAgo})`}</span>
+          <span class="version-value">{__GIT_DATE__}<br />{timeAgo && ` (${timeAgo})`}</span>
         </div>
         <div class="version-row">
           <span class="version-label">Message</span>
