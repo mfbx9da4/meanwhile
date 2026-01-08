@@ -26,7 +26,7 @@ const CONFIG = {
   todayEmoji: '📍',
   milestones: [
     { date: new Date(2025, 10, 20), label: 'Start', emoji: '🌱' },
-    { date: new Date(2025, 11, 24), label: 'Discovery', emoji: '🧪', style: 'discovery' },
+    { date: new Date(2025, 11, 24), label: 'Discovery', emoji: '🕵️‍♀️', style: 'discovery' },
     { date: new Date(2025, 11, 28), label: 'Hospital Scan', emoji: '🏥' },
     { date: new Date(2026, 0, 6), label: 'Dr Rodin', emoji: '👨‍⚕️' },
     { date: new Date(2026, 0, 23), label: 'Blood Tests', emoji: '🩸' },

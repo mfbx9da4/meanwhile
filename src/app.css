@@ -244,6 +244,7 @@
 
 .day.has-annotation {
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 /* Tooltip */
