@@ -120,12 +120,29 @@ const VERSION_TAP_COUNT = 5
 const VERSION_TAP_TIMEOUT = 500
 const DOUBLE_TAP_TIMEOUT = 300
 
+type ViewMode = 'grid' | 'calendar'
+
+const VIEW_MODE_KEY = 'pregnancy-visualizer-view-mode'
+
+function getStoredViewMode(): ViewMode {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_KEY)
+    if (stored === 'grid' || stored === 'calendar') {
+      return stored
+    }
+  } catch {
+    // localStorage not available
+  }
+  return 'grid'
+}
+
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
   const [pressingIndex, setPressingIndex] = useState<number | null>(null)
   const [showVersion, setShowVersion] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode)
 
   const pressTimer = useRef<number | null>(null)
   const pressStart = useRef<{ x: number; y: number } | null>(null)
@@ -242,6 +259,15 @@ export function App() {
     return () => clearInterval(interval)
   }, [])
 
+  // Persist view mode to local storage
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, viewMode)
+    } catch {
+      // localStorage not available
+    }
+  }, [viewMode])
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -311,48 +337,88 @@ export function App() {
   const currentDayInWeek = ((daysPassed - 1) % 7) + 1
   const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1)
 
+  const isLandscape = windowSize.width > windowSize.height
+  const toggleViewMode = useCallback(() => {
+    haptic()
+    setViewMode(prev => prev === 'grid' ? 'calendar' : 'grid')
+  }, [])
+
   return (
     <div class="container">
-      <div
-        class="grid"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
-          gridTemplateRows: `repeat(${rows}, 1fr)`,
-        }}
-      >
-        {days.map((day) => (
-          <div
-            key={day.index}
-            class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''} ${day.annotation ? 'has-annotation' : ''}`}
-            style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
-            onPointerDown={(e) => handlePointerDown(e as unknown as PointerEvent, day)}
-            onPointerMove={(e) => handlePointerMove(e as unknown as PointerEvent)}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={cancelPress}
-            onPointerLeave={cancelPress}
-          >
-            {day.annotation ? (
-              cellSize >= 50 ? (
-                <>
-                  <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{formatDate(addDays(CONFIG.startDate, day.index))}</span>
-                  <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
-                </>
+      {viewMode === 'grid' ? (
+        <div
+          class="grid"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, 1fr)`,
+            gridTemplateRows: `repeat(${rows}, 1fr)`,
+          }}
+        >
+          {days.map((day) => (
+            <div
+              key={day.index}
+              class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''} ${day.annotation ? 'has-annotation' : ''}`}
+              style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
+              onPointerDown={(e) => handlePointerDown(e as unknown as PointerEvent, day)}
+              onPointerMove={(e) => handlePointerMove(e as unknown as PointerEvent)}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={cancelPress}
+              onPointerLeave={cancelPress}
+            >
+              {day.annotation ? (
+                cellSize >= 50 ? (
+                  <>
+                    <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{formatDate(addDays(CONFIG.startDate, day.index))}</span>
+                    <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
+                  </>
+                ) : (
+                  <span class="annotation-container" style={{ fontSize: `${fontSize}px` }}>
+                    <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
+                    <span class={`annotation-date ${showAnnotationDate ? 'visible' : 'hidden'}`}>{formatDate(addDays(CONFIG.startDate, day.index))}</span>
+                  </span>
+                )
               ) : (
-                <span class="annotation-container" style={{ fontSize: `${fontSize}px` }}>
-                  <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
-                  <span class={`annotation-date ${showAnnotationDate ? 'visible' : 'hidden'}`}>{formatDate(addDays(CONFIG.startDate, day.index))}</span>
-                </span>
-              )
-            ) : (
-              <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <div class="info" onClick={handleVersionTap}>
-        <span>Week {currentWeek}, Day {currentDayInWeek}</span>
-        <span>{progressPercent}%</span>
-        <span>{timeRemaining}</span>
+                <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <CalendarView
+          days={days}
+          windowSize={windowSize}
+          isLandscape={isLandscape}
+          onDayPress={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          cancelPress={cancelPress}
+          pressingIndex={pressingIndex}
+        />
+      )}
+      <div class="info">
+        <button class="view-toggle" onClick={toggleViewMode} aria-label="Toggle view">
+          {viewMode === 'grid' ? (
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.3"/>
+              <rect x="7" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.5"/>
+              <rect x="13" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.7"/>
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="1" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="7" y="1" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="13" y="1" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="1" y="7" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="7" y="7" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="13" y="7" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="1" y="13" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="7" y="13" width="4" height="4" rx="1" fill="currentColor"/>
+              <rect x="13" y="13" width="4" height="4" rx="1" fill="currentColor"/>
+            </svg>
+          )}
+        </button>
+        <span class="info-text" onClick={handleVersionTap}>Week {currentWeek}, Day {currentDayInWeek}</span>
+        <span class="info-text" onClick={handleVersionTap}>{progressPercent}%</span>
+        <span class="info-text" onClick={handleVersionTap}>{timeRemaining}</span>
       </div>
       {showVersion && (
         <VersionPopover onClose={() => setShowVersion(false)} />
@@ -366,6 +432,276 @@ export function App() {
       )}
     </div>
   )
+}
+
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_LABELS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+function CalendarView({
+  days,
+  windowSize,
+  isLandscape,
+  onDayPress,
+  onPointerMove,
+  onPointerUp,
+  cancelPress,
+  pressingIndex,
+}: {
+  days: DayInfo[]
+  windowSize: { width: number; height: number }
+  isLandscape: boolean
+  onDayPress: (e: PointerEvent, day: DayInfo) => void
+  onPointerMove: (e: PointerEvent) => void
+  onPointerUp: () => void
+  cancelPress: () => void
+  pressingIndex: number | null
+}) {
+  const labelSpace = 24 // space for day labels (used in JSX)
+
+  // Calculate how many weeks we have
+  // First, figure out the day of week for the start date
+  const startDayOfWeek = CONFIG.startDate.getDay() // 0 = Sunday
+  const totalDays = days.length
+
+  // Calculate total weeks needed (including partial weeks at start and end)
+  const totalWeeks = Math.ceil((startDayOfWeek + totalDays) / 7)
+
+  // Calculate month labels with their positions
+  const monthLabels = useMemo(() => {
+    const labels: { month: string; position: number }[] = []
+    let lastMonth = -1
+
+    for (let i = 0; i < totalDays; i++) {
+      const date = addDays(CONFIG.startDate, i)
+      const month = date.getMonth()
+
+      if (month !== lastMonth) {
+        // Calculate week index for this day
+        const weekIndex = Math.floor((startDayOfWeek + i) / 7)
+        labels.push({
+          month: MONTHS[month],
+          position: weekIndex,
+        })
+        lastMonth = month
+      }
+    }
+    return labels
+  }, [totalDays, startDayOfWeek])
+
+  // Calculate cell size to fit all cells
+  const { cellSize, labelSize, gap } = useMemo(() => {
+    const padding = 8
+    const monthLabelSpace = 16 // space for month labels
+    const gapSize = 2
+
+    let availableWidth: number
+    let availableHeight: number
+    let numCols: number
+    let numRows: number
+
+    if (isLandscape) {
+      // Landscape: weeks horizontal, days vertical
+      availableWidth = windowSize.width - padding * 2 - labelSpace
+      availableHeight = windowSize.height - 50 - padding * 2 - monthLabelSpace
+      numCols = totalWeeks
+      numRows = 7
+    } else {
+      // Portrait: days horizontal, weeks vertical
+      availableWidth = windowSize.width - padding * 2 - labelSpace
+      availableHeight = windowSize.height - 50 - padding * 2 - monthLabelSpace
+      numCols = 7
+      numRows = totalWeeks
+    }
+
+    const maxCellWidth = (availableWidth - gapSize * (numCols - 1)) / numCols
+    const maxCellHeight = (availableHeight - gapSize * (numRows - 1)) / numRows
+    const size = Math.min(maxCellWidth, maxCellHeight)
+
+    return {
+      cellSize: Math.max(size, 8), // minimum 8px
+      labelSize: Math.max(8, Math.min(11, size * 0.4)),
+      gap: gapSize,
+    }
+  }, [windowSize, isLandscape, totalWeeks])
+
+  // Build the grid data: array of weeks, each containing array of days (or null for empty cells)
+  const weekData = useMemo(() => {
+    const weeks: (DayInfo | null)[][] = []
+
+    for (let week = 0; week < totalWeeks; week++) {
+      const weekDays: (DayInfo | null)[] = []
+      for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+        const dayIndex = week * 7 + dayOfWeek - startDayOfWeek
+        if (dayIndex >= 0 && dayIndex < totalDays) {
+          weekDays.push(days[dayIndex])
+        } else {
+          weekDays.push(null)
+        }
+      }
+      weeks.push(weekDays)
+    }
+    return weeks
+  }, [days, totalWeeks, startDayOfWeek, totalDays])
+
+  const usedDayLabels = cellSize < 20 ? DAY_LABELS_SHORT : DAY_LABELS
+
+  if (isLandscape) {
+    // Landscape: days are rows (vertical), weeks are columns (horizontal)
+    return (
+      <div class="calendar-view landscape">
+        <div class="calendar-body">
+          {/* Day labels column */}
+          <div class="calendar-day-labels" style={{ gap: `${gap}px`, marginTop: `${labelSize + 4}px` }}>
+            {usedDayLabels.map((label, i) => (
+              <span
+                key={i}
+                class="calendar-day-label"
+                style={{ height: `${cellSize}px`, fontSize: `${labelSize}px` }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Grid with month labels */}
+          <div class="calendar-grid-wrapper">
+            {/* Month labels row */}
+            <div class="calendar-month-labels" style={{ height: `${labelSize + 4}px` }}>
+              {monthLabels.map((label, i) => (
+                <span
+                  key={i}
+                  class="calendar-month-label"
+                  style={{
+                    left: `${label.position * (cellSize + gap)}px`,
+                    fontSize: `${labelSize}px`,
+                  }}
+                >
+                  {label.month}
+                </span>
+              ))}
+            </div>
+
+            {/* Grid */}
+            <div
+              class="calendar-grid"
+              style={{
+                gridTemplateColumns: `repeat(${totalWeeks}, ${cellSize}px)`,
+                gridTemplateRows: `repeat(7, ${cellSize}px)`,
+                gap: `${gap}px`,
+              }}
+            >
+            {/* Render by column (week), then row (day of week) */}
+            {Array.from({ length: 7 }, (_, dayOfWeek) =>
+              weekData.map((week, weekIndex) => {
+                const day = week[dayOfWeek]
+                return day ? (
+                  <div
+                    key={`${weekIndex}-${dayOfWeek}`}
+                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''}`}
+                    style={{
+                      gridColumn: weekIndex + 1,
+                      gridRow: dayOfWeek + 1,
+                      ...(day.color ? { background: `var(--color-${day.color})` } : {}),
+                    }}
+                    onPointerDown={(e) => onDayPress(e as unknown as PointerEvent, day)}
+                    onPointerMove={(e) => onPointerMove(e as unknown as PointerEvent)}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={cancelPress}
+                    onPointerLeave={cancelPress}
+                  />
+                ) : (
+                  <div
+                    key={`${weekIndex}-${dayOfWeek}`}
+                    class="calendar-cell empty"
+                    style={{
+                      gridColumn: weekIndex + 1,
+                      gridRow: dayOfWeek + 1,
+                    }}
+                  />
+                )
+              })
+            )}
+          </div>
+          </div>
+        </div>
+      </div>
+    )
+  } else {
+    // Portrait: days are columns (horizontal), weeks are rows (vertical)
+    const gridWidth = totalWeeks > 0 ? 7 * cellSize + 6 * gap : 0
+    const gridHeight = totalWeeks * cellSize + (totalWeeks - 1) * gap
+
+    return (
+      <div class="calendar-view portrait">
+        <div class="calendar-body-portrait">
+          {/* Empty corner cell */}
+          <div class="calendar-corner" style={{ width: `${labelSpace}px`, height: `${labelSize + 4}px` }} />
+
+          {/* Day labels row */}
+          <div class="calendar-day-labels-row" style={{ gap: `${gap}px`, height: `${labelSize + 4}px` }}>
+            {usedDayLabels.map((label, i) => (
+              <span
+                key={i}
+                class="calendar-day-label"
+                style={{ width: `${cellSize}px`, fontSize: `${labelSize}px` }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Month labels column */}
+          <div class="calendar-month-labels-col" style={{ width: `${labelSpace}px`, height: `${gridHeight}px` }}>
+            {monthLabels.map((label, i) => (
+              <span
+                key={i}
+                class="calendar-month-label"
+                style={{
+                  top: `${label.position * (cellSize + gap)}px`,
+                  fontSize: `${labelSize}px`,
+                }}
+              >
+                {label.month}
+              </span>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div
+            class="calendar-grid"
+            style={{
+              gridTemplateColumns: `repeat(7, ${cellSize}px)`,
+              gridTemplateRows: `repeat(${totalWeeks}, ${cellSize}px)`,
+              gap: `${gap}px`,
+            }}
+          >
+            {/* Render by row (week), then column (day of week) */}
+            {weekData.map((week, weekIndex) =>
+              week.map((day, dayOfWeek) =>
+                day ? (
+                  <div
+                    key={`${weekIndex}-${dayOfWeek}`}
+                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''}`}
+                    style={day.color ? { background: `var(--color-${day.color})` } : undefined}
+                    onPointerDown={(e) => onDayPress(e as unknown as PointerEvent, day)}
+                    onPointerMove={(e) => onPointerMove(e as unknown as PointerEvent)}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={cancelPress}
+                    onPointerLeave={cancelPress}
+                  />
+                ) : (
+                  <div
+                    key={`${weekIndex}-${dayOfWeek}`}
+                    class="calendar-cell empty"
+                  />
+                )
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 }
 
 function getCssVar(name: string): string {

@@ -361,3 +361,174 @@
   color: var(--color-text-primary);
   word-break: break-all;
 }
+
+/* View toggle button */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.view-toggle:hover {
+  background: var(--color-border);
+}
+
+.view-toggle:active {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.info-text {
+  cursor: pointer;
+}
+
+/* Calendar View Styles */
+.calendar-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.calendar-view.landscape .calendar-body {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-view.portrait .calendar-body-portrait {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto 1fr;
+  flex: 1;
+  align-content: center;
+  justify-content: center;
+}
+
+.calendar-corner {
+  /* Empty top-left corner */
+}
+
+.calendar-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Month labels - landscape (horizontal row at top) */
+.calendar-month-labels {
+  position: relative;
+}
+
+.calendar-month-labels .calendar-month-label {
+  position: absolute;
+  top: 0;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Month labels - portrait (vertical column on left) */
+.calendar-month-labels-col {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.calendar-month-labels-col .calendar-month-label {
+  position: absolute;
+  right: 4px;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Day labels - landscape (vertical column on left) */
+.calendar-day-labels {
+  display: flex;
+  flex-direction: column;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.calendar-day-labels .calendar-day-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 20px;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+  padding-right: 4px;
+}
+
+/* Day labels - portrait (horizontal row at top) */
+.calendar-day-labels-row {
+  display: flex;
+  align-items: flex-end;
+}
+
+.calendar-day-labels-row .calendar-day-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+/* Calendar grid */
+.calendar-grid {
+  display: grid;
+}
+
+/* Calendar cells */
+.calendar-cell {
+  border-radius: 2px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+}
+
+.calendar-cell.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-cell.passed.odd-week {
+  background: var(--color-passed-odd);
+}
+
+.calendar-cell.passed.even-week {
+  background: var(--color-passed-even);
+}
+
+.calendar-cell.future.odd-week {
+  background: var(--color-future-odd);
+  border: 1px solid var(--color-future-odd-border);
+  box-sizing: border-box;
+}
+
+.calendar-cell.future.even-week {
+  background: var(--color-future-even);
+  border: 1px solid var(--color-future-even-border);
+  box-sizing: border-box;
+}
+
+.calendar-cell.today {
+  box-shadow: 0 0 0 1px var(--color-primary);
+  animation: pulse-border 4s ease-in-out infinite;
+}
+
+.calendar-cell.pressing {
+  transform: scale(0.9);
+  animation: press-hint 0.4s ease-out forwards;
+}
