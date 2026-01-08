@@ -66,6 +66,7 @@ const getViewportSize = () => ({
 
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
+  const [showAnnotationDate, setShowAnnotationDate] = useState(false)
 
   useEffect(() => {
     const handleResize = () => setWindowSize(getViewportSize())
@@ -75,6 +76,14 @@ export function App() {
       window.removeEventListener('resize', handleResize)
       window.visualViewport?.removeEventListener('resize', handleResize)
     }
+  }, [])
+
+  // Cycle annotation display on mobile
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowAnnotationDate(prev => !prev)
+    }, 2500)
+    return () => clearInterval(interval)
   }, [])
 
   const today = new Date()
@@ -158,8 +167,21 @@ export function App() {
             key={day.index}
             class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''} ${day.isToday ? 'today' : ''}`}
           >
-            <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
-            {day.annotation && <span class="annotation" style={{ fontSize: `${fontSize}px` }}>{day.annotation}</span>}
+            {day.annotation ? (
+              cellSize >= 50 ? (
+                <>
+                  <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{formatDate(addDays(START_DATE, day.index))}</span>
+                  <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{day.annotation}</span>
+                </>
+              ) : (
+                <span class="annotation-container" style={{ fontSize: `${fontSize}px` }}>
+                  <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{day.annotation}</span>
+                  <span class={`annotation-date ${showAnnotationDate ? 'visible' : 'hidden'}`}>{formatDate(addDays(START_DATE, day.index))}</span>
+                </span>
+              )
+            ) : (
+              <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
+            )}
           </div>
         ))}
       </div>

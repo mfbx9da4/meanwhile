@@ -97,25 +97,58 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.annotation {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600;
-  color: #1c1c1e;
-  text-align: center;
-  line-height: 1.1;
-  margin-top: 1px;
-  letter-spacing: -0.01em;
+.annotation-container {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
-.day.passed .annotation {
+.annotation-text,
+.annotation-date {
+  grid-area: 1 / 1;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  color: #1c1c1e;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+}
+
+.annotation-text {
+  font-weight: 600;
+}
+
+.annotation-text.visible,
+.annotation-date.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.annotation-text.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.annotation-date.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.day.passed .annotation-text,
+.day.passed .annotation-date {
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.day.discovery .annotation,
-.day.announcement .annotation,
-.day.engagement .annotation,
-.day.due-date .annotation {
+.day.discovery .annotation-text,
+.day.discovery .annotation-date,
+.day.announcement .annotation-text,
+.day.announcement .annotation-date,
+.day.engagement .annotation-text,
+.day.engagement .annotation-date,
+.day.due-date .annotation-text,
+.day.due-date .annotation-date {
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
