@@ -1,17 +1,10 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
+import { FillView } from './FillView'
+import { InfoBar, VersionPopover } from './InfoBar'
+import { Tooltip } from './Tooltip'
+import type { DayInfo } from './types'
 import './app.css'
-
-type DayInfo = {
-  index: number
-  passed: boolean
-  color?: string  // color name from CSS variables (e.g., 'pink', 'purple', 'teal')
-  isToday: boolean
-  isOddWeek: boolean
-  dateLabel: string
-  annotation: string
-  isUncoloredMilestone: boolean  // milestone without a specified color
-}
 
 type TooltipState = {
   day: DayInfo
@@ -53,17 +46,6 @@ const ANNOTATION_EMOJIS: Record<string, string> = {
 const ANNOTATION_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
   CONFIG.milestones.filter(m => m.description).map(m => [m.label, m.description!])
 )
-
-function getAnnotationDisplay(text: string, cellSize: number, fontSize: number): string {
-  // Estimate if longest word fits: each char ~0.55 * fontSize wide
-  const longestWord = text.split(' ').reduce((a, b) => a.length > b.length ? a : b, '')
-  const estimatedWidth = longestWord.length * fontSize * 0.55
-  const availableWidth = cellSize * 0.85
-  if (estimatedWidth <= availableWidth) {
-    return text
-  }
-  return ANNOTATION_EMOJIS[text] || text
-}
 
 function getDaysBetween(start: Date, end: Date): number {
   const msPerDay = 1000 * 60 * 60 * 24
@@ -119,14 +101,14 @@ const getViewportSize = () => ({
 const VERSION_TAP_COUNT = 3
 const VERSION_TAP_TIMEOUT = 500
 
-type ViewMode = 'compact' | 'weekly'
+type ViewMode = 'fill' | 'weekly'
 
 const VIEW_MODE_KEY = 'pregnancy-visualizer-view-mode'
 
 function getStoredViewMode(): ViewMode {
   try {
     const stored = localStorage.getItem(VIEW_MODE_KEY)
-    if (stored === 'compact' || stored === 'weekly') {
+    if (stored === 'fill' || stored === 'weekly') {
       return stored
     }
   } catch {
@@ -234,7 +216,7 @@ export function App() {
   }, [])
 
   const availableWidth = windowSize.width - 20 // padding
-  const availableHeight = windowSize.height - 100 // padding + info bar + safe area + browser chrome
+  const availableHeight = windowSize.height
 
   const { cols, rows } = useMemo(() => calculateGrid(totalDays, availableWidth, availableHeight), [totalDays, availableWidth, availableHeight])
 
@@ -291,44 +273,24 @@ export function App() {
   const isLandscape = windowSize.width > windowSize.height
   const toggleViewMode = useCallback(() => {
     haptic()
-    setViewMode(prev => prev === 'compact' ? 'weekly' : 'compact')
+    setViewMode(prev => prev === 'fill' ? 'weekly' : 'fill')
   }, [])
 
   return (
     <div class="container">
-      {viewMode === 'compact' ? (
-        <div
-          class="grid"
-          style={{
-            gridTemplateColumns: `repeat(${cols}, 1fr)`,
-            gridTemplateRows: `repeat(${rows}, 1fr)`,
-          }}
-        >
-          {days.map((day) => (
-            <div
-              key={day.index}
-              class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''} ${tooltip?.day.index === day.index ? 'selected' : ''}`}
-              style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
-              onPointerDown={(e) => handleDayPointerDown(e as unknown as PointerEvent, day)}
-            >
-              {day.annotation ? (
-                cellSize >= 50 ? (
-                  <>
-                    <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{formatDate(addDays(CONFIG.startDate, day.index))}</span>
-                    <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
-                  </>
-                ) : (
-                  <span class="annotation-container" style={{ fontSize: `${fontSize}px` }}>
-                    <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
-                    <span class={`annotation-date ${showAnnotationDate ? 'visible' : 'hidden'}`}>{formatDate(addDays(CONFIG.startDate, day.index))}</span>
-                  </span>
-                )
-              ) : (
-                <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{day.dateLabel}</span>
-              )}
-            </div>
-          ))}
-        </div>
+      {viewMode === 'fill' ? (
+        <FillView
+          days={days}
+          cols={cols}
+          rows={rows}
+          cellSize={cellSize}
+          fontSize={fontSize}
+          showAnnotationDate={showAnnotationDate}
+          selectedDayIndex={tooltip?.day.index ?? null}
+          startDate={CONFIG.startDate}
+          annotationEmojis={ANNOTATION_EMOJIS}
+          onDayPointerDown={handleDayPointerDown}
+        />
       ) : (
         <WeeklyView
           days={days}
@@ -338,32 +300,15 @@ export function App() {
           selectedDayIndex={tooltip?.day.index ?? null}
         />
       )}
-      <div class="info">
-        <button class="view-toggle" onClick={toggleViewMode} aria-label="Toggle view">
-          {viewMode === 'compact' ? (
-            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-              <rect x="1" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.3"/>
-              <rect x="7" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.5"/>
-              <rect x="13" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.7"/>
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-              <rect x="1" y="1" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="7" y="1" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="13" y="1" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="1" y="7" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="7" y="7" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="13" y="7" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="1" y="13" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="7" y="13" width="4" height="4" rx="1" fill="currentColor"/>
-              <rect x="13" y="13" width="4" height="4" rx="1" fill="currentColor"/>
-            </svg>
-          )}
-        </button>
-        <span class="info-text" onClick={handleVersionTap}>Week {currentWeek}, Day {currentDayInWeek}</span>
-        <span class="info-text" onClick={handleVersionTap}>{progressPercent}%</span>
-        <span class="info-text" onClick={handleVersionTap}>{timeRemaining}</span>
-      </div>
+      <InfoBar
+        viewMode={viewMode}
+        currentWeek={currentWeek}
+        currentDayInWeek={currentDayInWeek}
+        progressPercent={progressPercent}
+        timeRemaining={timeRemaining}
+        onToggleView={toggleViewMode}
+        onVersionTap={handleVersionTap}
+      />
       {showVersion && (
         <VersionPopover onClose={() => setShowVersion(false)} />
       )}
@@ -372,6 +317,9 @@ export function App() {
           day={tooltip.day}
           position={tooltip.position}
           windowSize={windowSize}
+          startDate={CONFIG.startDate}
+          annotationEmojis={ANNOTATION_EMOJIS}
+          annotationDescriptions={ANNOTATION_DESCRIPTIONS}
         />
       )}
     </div>
@@ -646,136 +594,3 @@ function WeeklyView({
   }
 }
 
-function getCssVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-}
-
-function getDayColor(day: DayInfo): string {
-  if (day.color) {
-    const varName = `--color-${day.color}`
-    return getCssVar(varName) || getCssVar('--color-primary')
-  }
-  if (day.isToday) return getCssVar('--color-primary')
-  if (day.passed) return getCssVar(day.isOddWeek ? '--color-passed-odd' : '--color-passed-even')
-  return getCssVar(day.isOddWeek ? '--color-text-tertiary' : '--color-text-secondary')
-}
-
-function Tooltip({ day, position, windowSize }: {
-  day: DayInfo
-  position: { x: number; y: number }
-  windowSize: { width: number; height: number }
-}) {
-  const date = addDays(CONFIG.startDate, day.index)
-  const weekNum = Math.floor(day.index / 7) + 1
-  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
-  const fullDate = `${dayOfWeek}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
-  const color = getDayColor(day)
-
-  // Position tooltip: prefer above the touch point, fall back to below
-  const tooltipWidth = 180
-  const tooltipHeight = day.annotation ? 70 : 50
-  const margin = 12
-
-  let left = position.x - tooltipWidth / 2
-  let top = position.y - tooltipHeight - margin
-
-  // Keep within horizontal bounds
-  if (left < margin) left = margin
-  if (left + tooltipWidth > windowSize.width - margin) {
-    left = windowSize.width - tooltipWidth - margin
-  }
-
-  // If too close to top, show below instead
-  if (top < margin) {
-    top = position.y + margin
-  }
-
-  const emoji = day.annotation ? ANNOTATION_EMOJIS[day.annotation] : null
-  const description = day.annotation ? ANNOTATION_DESCRIPTIONS[day.annotation] : null
-
-  return (
-    <div
-      class={`day-tooltip ${emoji ? 'has-emoji' : ''}`}
-      style={{
-        left: `${left}px`,
-        top: `${top}px`,
-        borderColor: color,
-      }}
-    >
-      {emoji && <div class="tooltip-emoji">{emoji}</div>}
-      <div class="tooltip-content">
-        <div class="tooltip-date">{fullDate}</div>
-        <div class="tooltip-week">Week {weekNum}, Day {(day.index % 7) + 1}</div>
-        {day.annotation && <div class="tooltip-annotation" style={{ color }}>{day.annotation}</div>}
-        {description && <div class="tooltip-description">{description}</div>}
-      </div>
-    </div>
-  )
-}
-
-function getTimeAgo(dateString: string): string {
-  // Git date format: "2026-01-08 11:24:58 +0000"
-  // Convert to ISO format by replacing space with T before time
-  const isoString = dateString.replace(' ', 'T').replace(' ', '')
-  const date = new Date(isoString)
-
-  if (isNaN(date.getTime())) {
-    return ''
-  }
-
-  const now = new Date()
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (seconds < 0) {
-    return ''
-  }
-  if (seconds < 60) {
-    return seconds === 1 ? '1 second ago' : `${seconds} seconds ago`
-  }
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) {
-    return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`
-  }
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) {
-    return hours === 1 ? '1 hour ago' : `${hours} hours ago`
-  }
-  const days = Math.floor(hours / 24)
-  if (days < 30) {
-    return days === 1 ? '1 day ago' : `${days} days ago`
-  }
-  const months = Math.floor(days / 30)
-  if (months < 12) {
-    return months === 1 ? '1 month ago' : `${months} months ago`
-  }
-  const years = Math.floor(months / 12)
-  return years === 1 ? '1 year ago' : `${years} years ago`
-}
-
-function VersionPopover({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 5000)
-    return () => clearTimeout(timer)
-  }, [onClose])
-
-  const timeAgo = getTimeAgo(__GIT_DATE__)
-
-  return (
-    <div class="version-popover" onClick={onClose}>
-      <div class="version-content">
-        <div class="version-row">
-          <span class="version-label">Commit</span>
-          <span class="version-value">{__GIT_COMMIT__}</span>
-        </div>
-        <div class="version-row">
-          <span class="version-label">Date</span>
-          <span class="version-value">{__GIT_DATE__}<br />{timeAgo && ` (${timeAgo})`}</span>
-        </div>
-        <div class="version-row">
-          <span class="version-label">Message</span>
-          <span class="version-value">{__GIT_MESSAGE__}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
