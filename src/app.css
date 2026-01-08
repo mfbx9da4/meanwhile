@@ -260,6 +260,23 @@
   animation: tooltip-in 0.15s ease-out;
 }
 
+.day-tooltip.has-emoji {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tooltip-emoji {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tooltip-content {
+  flex: 1;
+  min-width: 0;
+}
+
 @keyframes tooltip-in {
   from {
     opacity: 0;

@@ -407,18 +407,23 @@ function Tooltip({ day, position, windowSize }: {
     top = position.y + margin
   }
 
+  const emoji = day.annotation ? ANNOTATION_EMOJIS[day.annotation] : null
+
   return (
     <div
-      class="day-tooltip"
+      class={`day-tooltip ${emoji ? 'has-emoji' : ''}`}
       style={{
         left: `${left}px`,
         top: `${top}px`,
         borderColor: color,
       }}
     >
-      <div class="tooltip-date">{fullDate}</div>
-      <div class="tooltip-week">Week {weekNum}, Day {(day.index % 7) + 1}</div>
-      {day.annotation && <div class="tooltip-annotation" style={{ color }}>{day.annotation}</div>}
+      {emoji && <div class="tooltip-emoji">{emoji}</div>}
+      <div class="tooltip-content">
+        <div class="tooltip-date">{fullDate}</div>
+        <div class="tooltip-week">Week {weekNum}, Day {(day.index % 7) + 1}</div>
+        {day.annotation && <div class="tooltip-annotation" style={{ color }}>{day.annotation}</div>}
+      </div>
     </div>
   )
 }
