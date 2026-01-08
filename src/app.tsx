@@ -481,14 +481,14 @@ function WeeklyView({
   if (isLandscape) {
     // Landscape: days are rows (vertical), weeks are columns (horizontal)
     return (
-      <div class="calendar-view landscape">
-        <div class="calendar-body">
+      <div class="weekly-view landscape">
+        <div class="weekly-body">
           {/* Day labels column */}
-          <div class="calendar-day-labels" style={{ gap: `${gap}px`, marginTop: `${labelSize + 4}px` }}>
+          <div class="weekly-day-labels" style={{ gap: `${gap}px`, marginTop: `${labelSize + 4}px` }}>
             {usedDayLabels.map((label, i) => (
               <span
                 key={i}
-                class="calendar-day-label"
+                class="weekly-day-label"
                 style={{ height: `${cellSize}px`, fontSize: `${labelSize}px` }}
               >
                 {label}
@@ -497,13 +497,13 @@ function WeeklyView({
           </div>
 
           {/* Grid with month labels */}
-          <div class="calendar-grid-wrapper">
+          <div class="weekly-grid-wrapper">
             {/* Month labels row */}
-            <div class="calendar-month-labels" style={{ height: `${labelSize + 4}px` }}>
+            <div class="weekly-month-labels" style={{ height: `${labelSize + 4}px` }}>
               {monthLabels.map((label, i) => (
                 <span
                   key={i}
-                  class="calendar-month-label"
+                  class="weekly-month-label"
                   style={{
                     left: `${label.position * (cellSize + gap)}px`,
                     fontSize: `${labelSize}px`,
@@ -516,10 +516,10 @@ function WeeklyView({
 
             {/* Grid */}
             <div
-              class="calendar-grid"
+              class="weekly-grid"
               style={{
-                gridTemplateColumns: `repeat(${totalWeeks}, 1fr)`,
-                gridTemplateRows: `repeat(7, 1fr)`,
+                gridTemplateColumns: `repeat(${totalWeeks}, ${cellSize}px)`,
+                gridTemplateRows: `repeat(7, ${cellSize}px)`,
                 gap: `${gap}px`,
               }}
             >
@@ -530,7 +530,7 @@ function WeeklyView({
                 return day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
+                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
                     style={{
                       gridColumn: weekIndex + 1,
                       gridRow: dayOfWeek + 1,
@@ -541,7 +541,7 @@ function WeeklyView({
                 ) : (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class="calendar-cell empty"
+                    class="weekly-cell empty"
                     style={{
                       gridColumn: weekIndex + 1,
                       gridRow: dayOfWeek + 1,
@@ -560,17 +560,17 @@ function WeeklyView({
     const gridHeight = totalWeeks * cellSize + (totalWeeks - 1) * gap
 
     return (
-      <div class="calendar-view portrait">
-        <div class="calendar-body-portrait">
+      <div class="weekly-view portrait">
+        <div class="weekly-body-portrait">
           {/* Empty corner cell */}
-          <div class="calendar-corner" style={{ width: `${labelSpace}px`, height: `${labelSize + 4}px` }} />
+          <div class="weekly-corner" style={{ width: `${labelSpace}px`, height: `${labelSize + 4}px` }} />
 
           {/* Day labels row */}
-          <div class="calendar-day-labels-row" style={{ gap: `${gap}px`, height: `${labelSize + 4}px` }}>
+          <div class="weekly-day-labels-row" style={{ gap: `${gap}px`, height: `${labelSize + 4}px` }}>
             {usedDayLabels.map((label, i) => (
               <span
                 key={i}
-                class="calendar-day-label"
+                class="weekly-day-label"
                 style={{ width: `${cellSize}px`, fontSize: `${labelSize}px` }}
               >
                 {label}
@@ -579,11 +579,11 @@ function WeeklyView({
           </div>
 
           {/* Month labels column */}
-          <div class="calendar-month-labels-col" style={{ width: `${labelSpace}px`, height: `${gridHeight}px` }}>
+          <div class="weekly-month-labels-col" style={{ width: `${labelSpace}px`, height: `${gridHeight}px` }}>
             {monthLabels.map((label, i) => (
               <span
                 key={i}
-                class="calendar-month-label"
+                class="weekly-month-label"
                 style={{
                   top: `${label.position * (cellSize + gap)}px`,
                   fontSize: `${labelSize}px`,
@@ -596,7 +596,7 @@ function WeeklyView({
 
           {/* Grid */}
           <div
-            class="calendar-grid"
+            class="weekly-grid"
             style={{
               gridTemplateColumns: `repeat(7, 1fr)`,
               gridTemplateRows: `repeat(${totalWeeks}, 1fr)`,
@@ -609,14 +609,14 @@ function WeeklyView({
                 day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
+                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
                     style={day.color ? { background: `var(--color-${day.color})` } : undefined}
                     onPointerDown={(e) => onDayPointerDown(e as unknown as PointerEvent, day)}
                   />
                 ) : (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class="calendar-cell empty"
+                    class="weekly-cell empty"
                   />
                 )
               )
