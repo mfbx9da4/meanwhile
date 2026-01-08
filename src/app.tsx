@@ -235,7 +235,7 @@ export function App() {
 
   const cellSize = useMemo(() => {
     const availableWidth = windowSize.width - 20 // padding
-    const availableHeight = windowSize.height - 50 // padding + info bar
+    const availableHeight = windowSize.height - 80 // padding + info bar + safe area
     const cellWidth = availableWidth / cols
     const cellHeight = availableHeight / rows
     return Math.min(cellWidth, cellHeight)
@@ -434,13 +434,13 @@ function CalendarView({
     if (isLandscape) {
       // Landscape: weeks horizontal, days vertical
       availableWidth = windowSize.width - padding * 2 - labelSpace
-      availableHeight = windowSize.height - 50 - padding * 2 - monthLabelSpace
+      availableHeight = windowSize.height - 80 - padding * 2 - monthLabelSpace
       numCols = totalWeeks
       numRows = 7
     } else {
       // Portrait: days horizontal, weeks vertical
       availableWidth = windowSize.width - padding * 2 - labelSpace
-      availableHeight = windowSize.height - 50 - padding * 2 - monthLabelSpace
+      availableHeight = windowSize.height - 80 - padding * 2 - monthLabelSpace
       numCols = 7
       numRows = totalWeeks
     }
@@ -694,11 +694,41 @@ function Tooltip({ day, position, windowSize }: {
   )
 }
 
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (seconds < 60) {
+    return seconds === 1 ? '1 second ago' : `${seconds} seconds ago`
+  }
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) {
+    return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`
+  }
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) {
+    return hours === 1 ? '1 hour ago' : `${hours} hours ago`
+  }
+  const days = Math.floor(hours / 24)
+  if (days < 30) {
+    return days === 1 ? '1 day ago' : `${days} days ago`
+  }
+  const months = Math.floor(days / 30)
+  if (months < 12) {
+    return months === 1 ? '1 month ago' : `${months} months ago`
+  }
+  const years = Math.floor(months / 12)
+  return years === 1 ? '1 year ago' : `${years} years ago`
+}
+
 function VersionPopover({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 5000)
     return () => clearTimeout(timer)
   }, [onClose])
+
+  const timeAgo = getTimeAgo(__GIT_DATE__)
 
   return (
     <div class="version-popover" onClick={onClose}>
@@ -709,7 +739,7 @@ function VersionPopover({ onClose }: { onClose: () => void }) {
         </div>
         <div class="version-row">
           <span class="version-label">Date</span>
-          <span class="version-value">{__GIT_DATE__}</span>
+          <span class="version-value">{__GIT_DATE__} ({timeAgo})</span>
         </div>
         <div class="version-row">
           <span class="version-label">Message</span>
