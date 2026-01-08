@@ -490,14 +490,14 @@ function WeeklyView({
 
   if (isLandscape) {
     // Landscape: days are rows (vertical), weeks are columns (horizontal)
-    // Months on TOP, week numbers on BOTTOM
+    // Week numbers on TOP, months on BOTTOM (under grid)
     const gridWidth = totalWeeks * cellSize + (totalWeeks - 1) * gap
 
     return (
       <div class="weekly-view landscape">
         <div class="weekly-body">
           {/* Day labels column */}
-          <div class="weekly-day-labels" style={{ gap: `${gap}px`, marginTop: `${(labelSize + 4) * 2}px` }}>
+          <div class="weekly-day-labels" style={{ gap: `${gap}px`, marginTop: `${labelSize + 4}px` }}>
             {usedDayLabels.map((label, i) => (
               <span
                 key={i}
@@ -511,23 +511,7 @@ function WeeklyView({
 
           {/* Grid with labels */}
           <div class="weekly-grid-wrapper">
-            {/* Month labels row (TOP) */}
-            <div class="weekly-month-labels-row" style={{ height: `${labelSize + 4}px`, width: `${gridWidth}px` }}>
-              {weekLabels.filter(l => l.month).map((label, i) => (
-                <span
-                  key={i}
-                  class="weekly-month-label"
-                  style={{
-                    left: `${label.position * (cellSize + gap)}px`,
-                    fontSize: `${labelSize}px`,
-                  }}
-                >
-                  {label.month}
-                </span>
-              ))}
-            </div>
-
-            {/* Week numbers row (BOTTOM, just above grid) */}
+            {/* Week numbers row (TOP) */}
             <div class="weekly-week-nums-row" style={{ height: `${labelSize + 4}px`, width: `${gridWidth}px` }}>
               {weekLabels.map((label, i) => (
                 <span
@@ -580,6 +564,22 @@ function WeeklyView({
               })
             )}
           </div>
+
+            {/* Month labels row (BOTTOM) */}
+            <div class="weekly-month-labels-row" style={{ height: `${labelSize + 4}px`, width: `${gridWidth}px` }}>
+              {weekLabels.filter(l => l.month).map((label, i) => (
+                <span
+                  key={i}
+                  class="weekly-month-label"
+                  style={{
+                    left: `${label.position * (cellSize + gap)}px`,
+                    fontSize: `${labelSize}px`,
+                  }}
+                >
+                  {label.month}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
