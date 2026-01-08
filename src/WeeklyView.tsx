@@ -20,6 +20,7 @@ type WeeklyViewProps = {
   startDate: Date
   onDayPointerDown: (e: PointerEvent, day: DayInfo) => void
   selectedDayIndex: number | null
+  showDebug?: boolean
 }
 
 export function WeeklyView({
@@ -29,6 +30,7 @@ export function WeeklyView({
   startDate,
   onDayPointerDown,
   selectedDayIndex,
+  showDebug,
 }: WeeklyViewProps) {
   const startDayOfWeek = (startDate.getDay() + 3) % 7
   const totalDays = days.length
@@ -208,6 +210,26 @@ export function WeeklyView({
 
     return (
       <div class="weekly-view portrait" style={{ padding: `${LAYOUT.padding}px` }}>
+        {showDebug && (
+          <>
+            <div style={{
+              position: 'fixed', top: 0, left: 0,
+              width: 80, height: windowSize.height,
+              background: 'rgba(255,0,0,0.2)',
+              pointerEvents: 'none', zIndex: 9999,
+              fontSize: '10px', color: 'red',
+              writingMode: 'vertical-rl'
+            }}>height: {windowSize.height}px</div>
+            <div style={{
+              position: 'fixed', top: 0, left: 0,
+              width: windowSize.width, height: 80,
+              background: 'rgba(0,0,255,0.2)',
+              pointerEvents: 'none', zIndex: 9999,
+              fontSize: '10px', color: 'blue'
+            }}>width: {windowSize.width}px</div>
+          </>
+        )}
+
         <div
           class="weekly-unified-grid"
           style={{
