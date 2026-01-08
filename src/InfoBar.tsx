@@ -1,10 +1,36 @@
-import { useEffect } from 'preact/hooks'
+import { useEffect, useRef, useCallback } from 'preact/hooks'
+import { haptic } from 'ios-haptics'
+import type { ViewMode } from './useViewMode'
 
 declare const __GIT_COMMIT__: string
 declare const __GIT_DATE__: string
 declare const __GIT_MESSAGE__: string
 
-type ViewMode = 'fill' | 'weekly'
+const VERSION_TAP_COUNT = 3
+const VERSION_TAP_TIMEOUT = 500
+
+export function useVersionTap(onShowVersion: () => void) {
+  const versionTapCount = useRef(0)
+  const versionTapTimer = useRef<number | null>(null)
+
+  const handleVersionTap = useCallback(() => {
+    if (versionTapTimer.current) {
+      clearTimeout(versionTapTimer.current)
+    }
+    versionTapCount.current++
+    if (versionTapCount.current >= VERSION_TAP_COUNT) {
+      versionTapCount.current = 0
+      haptic()
+      onShowVersion()
+    } else {
+      versionTapTimer.current = window.setTimeout(() => {
+        versionTapCount.current = 0
+      }, VERSION_TAP_TIMEOUT)
+    }
+  }, [onShowVersion])
+
+  return handleVersionTap
+}
 
 type InfoBarProps = {
   viewMode: ViewMode

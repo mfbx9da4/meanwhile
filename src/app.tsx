@@ -1,8 +1,9 @@
-import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks'
+import { useMemo, useState, useEffect, useCallback } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import { FillView } from './FillView'
-import { InfoBar, VersionPopover } from './InfoBar'
+import { InfoBar, VersionPopover, useVersionTap } from './InfoBar'
 import { Tooltip } from './Tooltip'
+import { useViewMode } from './useViewMode'
 import type { DayInfo } from './types'
 import './app.css'
 
@@ -98,34 +99,13 @@ const getViewportSize = () => ({
   height: window.visualViewport?.height ?? window.innerHeight,
 })
 
-const VERSION_TAP_COUNT = 3
-const VERSION_TAP_TIMEOUT = 500
-
-type ViewMode = 'fill' | 'weekly'
-
-const VIEW_MODE_KEY = 'pregnancy-visualizer-view-mode'
-
-function getStoredViewMode(): ViewMode {
-  try {
-    const stored = localStorage.getItem(VIEW_MODE_KEY)
-    if (stored === 'fill' || stored === 'weekly') {
-      return stored
-    }
-  } catch {
-    // localStorage not available
-  }
-  return 'weekly'
-}
-
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
   const [showVersion, setShowVersion] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode)
-
-  const versionTapCount = useRef(0)
-  const versionTapTimer = useRef<number | null>(null)
+  const [viewMode, setViewMode] = useViewMode()
+  const handleVersionTap = useVersionTap(() => setShowVersion(true))
 
   useEffect(() => {
     const handleResize = () => setWindowSize(getViewportSize())
@@ -166,22 +146,6 @@ export function App() {
     })
   }, [tooltip])
 
-  const handleVersionTap = useCallback(() => {
-    if (versionTapTimer.current) {
-      clearTimeout(versionTapTimer.current)
-    }
-    versionTapCount.current++
-    if (versionTapCount.current >= VERSION_TAP_COUNT) {
-      versionTapCount.current = 0
-      haptic()
-      setShowVersion(true)
-    } else {
-      versionTapTimer.current = window.setTimeout(() => {
-        versionTapCount.current = 0
-      }, VERSION_TAP_TIMEOUT)
-    }
-  }, [])
-
   // Cycle annotation display on mobile
   useEffect(() => {
     const interval = setInterval(() => {
@@ -189,15 +153,6 @@ export function App() {
     }, 2500)
     return () => clearInterval(interval)
   }, [])
-
-  // Persist view mode to local storage
-  useEffect(() => {
-    try {
-      localStorage.setItem(VIEW_MODE_KEY, viewMode)
-    } catch {
-      // localStorage not available
-    }
-  }, [viewMode])
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
