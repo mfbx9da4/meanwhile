@@ -1,5 +1,23 @@
-import { useMemo, useState, useEffect } from 'preact/hooks'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks'
 import './app.css'
+
+type DayInfo = {
+  index: number
+  passed: boolean
+  isDiscovery: boolean
+  isAnnouncement: boolean
+  isEngagement: boolean
+  isDueDate: boolean
+  isToday: boolean
+  isWeekStart: boolean
+  dateLabel: string
+  annotation: string
+}
+
+type TooltipState = {
+  day: DayInfo
+  position: { x: number; y: number }
+} | null
 
 // Hard-coded dates
 const START_DATE = new Date(2025, 10, 20) // November 20, 2025
@@ -12,6 +30,28 @@ const ENGAGEMENT_PARTY = new Date(2026, 3, 12) // April 12, 2026
 const DUE_DATE = new Date(2026, 7, 20) // August 20, 2026
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const ANNOTATION_EMOJIS: Record<string, string> = {
+  'Start': '🌱',
+  'Discovery': '🧪',
+  'Hospital Scan': '🏥',
+  'Dr Rodin': '👨‍⚕️',
+  '10 Week Scan': '🔬',
+  'Announce!': '📢',
+  'Engagement Party': '🎉',
+  'Today': '📍',
+  'Due': '👶',
+}
+
+function getAnnotationDisplay(text: string, cellSize: number, fontSize: number): string {
+  // Estimate if text fits: each char ~0.6 * fontSize wide
+  const estimatedWidth = text.length * fontSize * 0.6
+  const availableWidth = cellSize * 0.85
+  if (estimatedWidth <= availableWidth) {
+    return text
+  }
+  return ANNOTATION_EMOJIS[text] || text
+}
 
 function getDaysBetween(start: Date, end: Date): number {
   const msPerDay = 1000 * 60 * 60 * 24
@@ -64,9 +104,17 @@ const getViewportSize = () => ({
   height: window.visualViewport?.height ?? window.innerHeight,
 })
 
+const LONG_PRESS_DURATION = 400
+const LONG_PRESS_MOVE_THRESHOLD = 10
+
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
+  const [tooltip, setTooltip] = useState<TooltipState>(null)
+  const [pressingIndex, setPressingIndex] = useState<number | null>(null)
+
+  const pressTimer = useRef<number | null>(null)
+  const pressStart = useRef<{ x: number; y: number } | null>(null)
 
   useEffect(() => {
     const handleResize = () => setWindowSize(getViewportSize())
@@ -77,6 +125,65 @@ export function App() {
       window.visualViewport?.removeEventListener('resize', handleResize)
     }
   }, [])
+
+  // Dismiss tooltip on tap elsewhere
+  useEffect(() => {
+    if (!tooltip) return
+    const dismiss = () => setTooltip(null)
+    document.addEventListener('pointerdown', dismiss)
+    return () => document.removeEventListener('pointerdown', dismiss)
+  }, [tooltip])
+
+  // Auto-dismiss tooltip after 3 seconds
+  useEffect(() => {
+    if (!tooltip) return
+    const timer = setTimeout(() => setTooltip(null), 3000)
+    return () => clearTimeout(timer)
+  }, [tooltip])
+
+  const cancelPress = useCallback(() => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current)
+      pressTimer.current = null
+    }
+    pressStart.current = null
+    setPressingIndex(null)
+  }, [])
+
+  const handlePointerDown = useCallback((e: PointerEvent, day: DayInfo) => {
+    e.stopPropagation()
+    cancelPress()
+    setTooltip(null)
+
+    pressStart.current = { x: e.clientX, y: e.clientY }
+    setPressingIndex(day.index)
+
+    pressTimer.current = window.setTimeout(() => {
+      // Haptic feedback on successful long press
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10)
+      }
+      setTooltip({
+        day,
+        position: { x: e.clientX, y: e.clientY }
+      })
+      setPressingIndex(null)
+      pressTimer.current = null
+    }, LONG_PRESS_DURATION)
+  }, [cancelPress])
+
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    if (!pressStart.current) return
+    const dx = e.clientX - pressStart.current.x
+    const dy = e.clientY - pressStart.current.y
+    if (Math.sqrt(dx * dx + dy * dy) > LONG_PRESS_MOVE_THRESHOLD) {
+      cancelPress()
+    }
+  }, [cancelPress])
+
+  const handlePointerUp = useCallback(() => {
+    cancelPress()
+  }, [cancelPress])
 
   // Cycle annotation display on mobile
   useEffect(() => {
@@ -165,17 +272,22 @@ export function App() {
         {days.map((day) => (
           <div
             key={day.index}
-            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''} ${day.isToday ? 'today' : ''}`}
+            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''}`}
+            onPointerDown={(e) => handlePointerDown(e as unknown as PointerEvent, day)}
+            onPointerMove={(e) => handlePointerMove(e as unknown as PointerEvent)}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={cancelPress}
+            onPointerLeave={cancelPress}
           >
             {day.annotation ? (
               cellSize >= 50 ? (
                 <>
                   <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{formatDate(addDays(START_DATE, day.index))}</span>
-                  <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{day.annotation}</span>
+                  <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
                 </>
               ) : (
                 <span class="annotation-container" style={{ fontSize: `${fontSize}px` }}>
-                  <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{day.annotation}</span>
+                  <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{getAnnotationDisplay(day.annotation, cellSize, fontSize)}</span>
                   <span class={`annotation-date ${showAnnotationDate ? 'visible' : 'hidden'}`}>{formatDate(addDays(START_DATE, day.index))}</span>
                 </span>
               )
@@ -190,6 +302,57 @@ export function App() {
         <span>{progressPercent}%</span>
         <span>{timeRemaining}</span>
       </div>
+      {tooltip && (
+        <Tooltip
+          day={tooltip.day}
+          position={tooltip.position}
+          windowSize={windowSize}
+        />
+      )}
+    </div>
+  )
+}
+
+function Tooltip({ day, position, windowSize }: {
+  day: DayInfo
+  position: { x: number; y: number }
+  windowSize: { width: number; height: number }
+}) {
+  const date = addDays(START_DATE, day.index)
+  const weekNum = Math.floor(day.index / 7) + 1
+  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+  const fullDate = `${dayOfWeek}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
+
+  // Position tooltip: prefer above the touch point, fall back to below
+  const tooltipWidth = 180
+  const tooltipHeight = day.annotation ? 70 : 50
+  const margin = 12
+
+  let left = position.x - tooltipWidth / 2
+  let top = position.y - tooltipHeight - margin
+
+  // Keep within horizontal bounds
+  if (left < margin) left = margin
+  if (left + tooltipWidth > windowSize.width - margin) {
+    left = windowSize.width - tooltipWidth - margin
+  }
+
+  // If too close to top, show below instead
+  if (top < margin) {
+    top = position.y + margin
+  }
+
+  return (
+    <div
+      class="day-tooltip"
+      style={{
+        left: `${left}px`,
+        top: `${top}px`,
+      }}
+    >
+      <div class="tooltip-date">{fullDate}</div>
+      <div class="tooltip-week">Week {weekNum}, Day {(day.index % 7) + 1}</div>
+      {day.annotation && <div class="tooltip-annotation">{day.annotation}</div>}
     </div>
   )
 }
