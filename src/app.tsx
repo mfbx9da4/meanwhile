@@ -234,7 +234,7 @@ export function App() {
   const { cols, rows } = useMemo(() => calculateGrid(totalDays, windowSize.width, windowSize.height), [totalDays, windowSize])
 
   const cellSize = useMemo(() => {
-    const availableWidth = windowSize.width - 16 // padding
+    const availableWidth = windowSize.width - 20 // padding
     const availableHeight = windowSize.height - 50 // padding + info bar
     const cellWidth = availableWidth / cols
     const cellHeight = availableHeight / rows
@@ -373,8 +373,8 @@ export function App() {
   )
 }
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const DAY_LABELS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const DAY_LABELS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
 function CalendarView({
   days,
@@ -391,7 +391,8 @@ function CalendarView({
 
   // Calculate how many weeks we have
   // First, figure out the day of week for the start date
-  const startDayOfWeek = CONFIG.startDate.getDay() // 0 = Sunday
+  // Convert to Monday-first: (getDay() + 6) % 7 makes Monday = 0, Sunday = 6
+  const startDayOfWeek = (CONFIG.startDate.getDay() + 6) % 7
   const totalDays = days.length
 
   // Calculate total weeks needed (including partial weeks at start and end)
@@ -421,7 +422,7 @@ function CalendarView({
 
   // Calculate cell size to fit all cells
   const { cellSize, labelSize, gap } = useMemo(() => {
-    const padding = 8
+    const padding = 10
     const monthLabelSpace = 16 // space for month labels
     const gapSize = 2
 
@@ -647,7 +648,7 @@ function Tooltip({ day, position, windowSize }: {
 }) {
   const date = addDays(CONFIG.startDate, day.index)
   const weekNum = Math.floor(day.index / 7) + 1
-  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+  const dayOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(date.getDay() + 6) % 7]
   const fullDate = `${dayOfWeek}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
   const color = getDayColor(day)
 
