@@ -18,7 +18,7 @@ type WeeklyViewProps = {
   windowSize: { width: number; height: number }
   isLandscape: boolean
   startDate: Date
-  onDayPointerDown: (e: PointerEvent, day: DayInfo) => void
+  onDayClick: (e: MouseEvent, day: DayInfo) => void
   selectedDayIndex: number | null
 }
 
@@ -27,7 +27,7 @@ export function WeeklyView({
   windowSize,
   isLandscape,
   startDate,
-  onDayPointerDown,
+  onDayClick,
   selectedDayIndex,
 }: WeeklyViewProps) {
   const startDayOfWeek = (startDate.getDay() + 3) % 7
@@ -169,7 +169,7 @@ export function WeeklyView({
                         gridRow: dayOfWeek + 1,
                         ...(day.color ? { background: `var(--color-${day.color})` } : {}),
                       }}
-                      onPointerDown={(e) => onDayPointerDown(e as unknown as PointerEvent, day)}
+                      onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
                     />
                   ) : (
                     <div
@@ -232,7 +232,7 @@ export function WeeklyView({
                     key={`${weekIndex}-${dayOfWeek}`}
                     class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''}`}
                     style={day.color ? { background: `var(--color-${day.color})` } : undefined}
-                    onPointerDown={(e) => onDayPointerDown(e as unknown as PointerEvent, day)}
+                    onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
                   />
                 ) : (
                   <div

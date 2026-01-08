@@ -64,7 +64,7 @@ type FillViewProps = {
   selectedDayIndex: number | null
   startDate: Date
   annotationEmojis: Record<string, string>
-  onDayPointerDown: (e: PointerEvent, day: DayInfo) => void
+  onDayClick: (e: MouseEvent, day: DayInfo) => void
 }
 
 export function FillView({
@@ -74,7 +74,7 @@ export function FillView({
   selectedDayIndex,
   startDate,
   annotationEmojis,
-  onDayPointerDown,
+  onDayClick,
 }: FillViewProps) {
   const totalDays = days.length
   const availableWidth = windowSize.width - LAYOUT.padding * 2
@@ -115,7 +115,7 @@ export function FillView({
           key={day.index}
           class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''} ${selectedDayIndex === day.index ? 'selected' : ''}`}
           style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
-          onPointerDown={(e) => onDayPointerDown(e as unknown as PointerEvent, day)}
+          onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
         >
           {day.annotation ? (
             cellSize >= 50 ? (

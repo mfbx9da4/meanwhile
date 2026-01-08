@@ -65,14 +65,14 @@ export function App() {
     return () => document.removeEventListener('pointerdown', dismiss)
   }, [tooltip])
 
-  // Auto-dismiss tooltip after 3 seconds
+  // Auto-dismiss tooltip after 5 seconds
   useEffect(() => {
     if (!tooltip) return
-    const timer = setTimeout(() => setTooltip(null), 3000)
+    const timer = setTimeout(() => setTooltip(null), 5000)
     return () => clearTimeout(timer)
   }, [tooltip])
 
-  const handleDayPointerDown = useCallback((e: PointerEvent, day: DayInfo) => {
+  const handleDayClick = useCallback((e: MouseEvent, day: DayInfo) => {
     e.stopPropagation()
     // If tooltip is open, just close it
     if (tooltip) {
@@ -166,7 +166,7 @@ export function App() {
             selectedDayIndex={tooltip?.day.index ?? null}
             startDate={CONFIG.startDate}
             annotationEmojis={ANNOTATION_EMOJIS}
-            onDayPointerDown={handleDayPointerDown}
+            onDayClick={handleDayClick}
           />
         ) : (
           <WeeklyView
@@ -174,7 +174,7 @@ export function App() {
             windowSize={contentSize}
             isLandscape={isLandscape}
             startDate={CONFIG.startDate}
-            onDayPointerDown={handleDayPointerDown}
+            onDayClick={handleDayClick}
             selectedDayIndex={tooltip?.day.index ?? null}
           />
         ))}
