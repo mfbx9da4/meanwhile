@@ -83,6 +83,9 @@
   text-align: center;
   line-height: 1.2;
   letter-spacing: -0.01em;
+}
+
+.date-label:not(:only-child) {
   margin-bottom: 2px;
 }
 
