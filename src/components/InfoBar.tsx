@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
-import type { ViewMode } from './useViewMode'
+import type { ViewMode } from '../hooks/useViewMode'
 
 declare const __GIT_COMMIT__: string
 declare const __GIT_DATE__: string

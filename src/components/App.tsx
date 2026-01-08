@@ -4,11 +4,11 @@ import { FillView } from './FillView'
 import { WeeklyView } from './WeeklyView'
 import { InfoBar, VersionPopover, useVersionTap } from './InfoBar'
 import { Tooltip } from './Tooltip'
-import { useViewMode } from './useViewMode'
-import { useContentSize } from './useContentSize'
-import { CONFIG, ANNOTATION_EMOJIS, ANNOTATION_DESCRIPTIONS } from './config'
-import type { DayInfo } from './types'
-import './app.css'
+import { useViewMode } from '../hooks/useViewMode'
+import { useContentSize } from '../hooks/useContentSize'
+import { CONFIG, ANNOTATION_EMOJIS, ANNOTATION_DESCRIPTIONS } from '../config'
+import type { DayInfo } from '../types'
+import '../styles/app.css'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 

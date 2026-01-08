@@ -1,6 +1,6 @@
 import { useMemo } from 'preact/hooks'
-import type { DayInfo } from './types'
-import { LAYOUT } from './constants'
+import type { DayInfo } from '../types'
+import { LAYOUT } from '../constants'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
