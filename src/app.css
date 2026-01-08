@@ -259,6 +259,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   pointer-events: none;
   animation: tooltip-in 0.15s ease-out;
+  max-width: 280px;
 }
 
 .day-tooltip.has-emoji {
