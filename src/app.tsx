@@ -231,15 +231,16 @@ export function App() {
     return lookup
   }, [])
 
-  const { cols, rows } = useMemo(() => calculateGrid(totalDays, windowSize.width, windowSize.height), [totalDays, windowSize])
+  const availableWidth = windowSize.width - 20 // padding
+  const availableHeight = windowSize.height - 80 // padding + info bar + safe area
+
+  const { cols, rows } = useMemo(() => calculateGrid(totalDays, availableWidth, availableHeight), [totalDays, availableWidth, availableHeight])
 
   const cellSize = useMemo(() => {
-    const availableWidth = windowSize.width - 20 // padding
-    const availableHeight = windowSize.height - 80 // padding + info bar + safe area
     const cellWidth = availableWidth / cols
     const cellHeight = availableHeight / rows
     return Math.min(cellWidth, cellHeight)
-  }, [windowSize, cols, rows])
+  }, [availableWidth, availableHeight, cols, rows])
 
   const fontSize = useMemo(() => {
     const base = cellSize * 0.16
@@ -695,10 +696,21 @@ function Tooltip({ day, position, windowSize }: {
 }
 
 function getTimeAgo(dateString: string): string {
-  const date = new Date(dateString)
+  // Git date format: "2026-01-08 11:24:58 +0000"
+  // Convert to ISO format by replacing space with T before time
+  const isoString = dateString.replace(' ', 'T').replace(' ', '')
+  const date = new Date(isoString)
+
+  if (isNaN(date.getTime())) {
+    return ''
+  }
+
   const now = new Date()
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
+  if (seconds < 0) {
+    return ''
+  }
   if (seconds < 60) {
     return seconds === 1 ? '1 second ago' : `${seconds} seconds ago`
   }
@@ -739,7 +751,7 @@ function VersionPopover({ onClose }: { onClose: () => void }) {
         </div>
         <div class="version-row">
           <span class="version-label">Date</span>
-          <span class="version-value">{__GIT_DATE__} ({timeAgo})</span>
+          <span class="version-value">{__GIT_DATE__}{timeAgo && ` (${timeAgo})`}</span>
         </div>
         <div class="version-row">
           <span class="version-label">Message</span>
