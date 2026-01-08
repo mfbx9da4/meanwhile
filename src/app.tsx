@@ -117,20 +117,20 @@ const getViewportSize = () => ({
 const VERSION_TAP_COUNT = 3
 const VERSION_TAP_TIMEOUT = 500
 
-type ViewMode = 'grid' | 'calendar'
+type ViewMode = 'compact' | 'weekly'
 
 const VIEW_MODE_KEY = 'pregnancy-visualizer-view-mode'
 
 function getStoredViewMode(): ViewMode {
   try {
     const stored = localStorage.getItem(VIEW_MODE_KEY)
-    if (stored === 'grid' || stored === 'calendar') {
+    if (stored === 'compact' || stored === 'weekly') {
       return stored
     }
   } catch {
     // localStorage not available
   }
-  return 'grid'
+  return 'weekly'
 }
 
 export function App() {
@@ -288,12 +288,12 @@ export function App() {
   const isLandscape = windowSize.width > windowSize.height
   const toggleViewMode = useCallback(() => {
     haptic()
-    setViewMode(prev => prev === 'grid' ? 'calendar' : 'grid')
+    setViewMode(prev => prev === 'compact' ? 'weekly' : 'compact')
   }, [])
 
   return (
     <div class="container">
-      {viewMode === 'grid' ? (
+      {viewMode === 'compact' ? (
         <div
           class="grid"
           style={{
@@ -327,7 +327,7 @@ export function App() {
           ))}
         </div>
       ) : (
-        <CalendarView
+        <WeeklyView
           days={days}
           windowSize={windowSize}
           isLandscape={isLandscape}
@@ -336,7 +336,7 @@ export function App() {
       )}
       <div class="info">
         <button class="view-toggle" onClick={toggleViewMode} aria-label="Toggle view">
-          {viewMode === 'grid' ? (
+          {viewMode === 'compact' ? (
             <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
               <rect x="1" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.3"/>
               <rect x="7" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.5"/>
@@ -377,7 +377,7 @@ export function App() {
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_LABELS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-function CalendarView({
+function WeeklyView({
   days,
   windowSize,
   isLandscape,
