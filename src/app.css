@@ -444,7 +444,7 @@
 
 .weekly-week-labels .weekly-week-label {
   position: absolute;
-  top: 0;
+  bottom: 0;
   color: var(--color-text-tertiary);
   font-weight: 500;
   white-space: nowrap;
