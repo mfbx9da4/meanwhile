@@ -3,12 +3,12 @@ export const CONFIG = {
   dueDate: new Date(2026, 7, 20),     // August 20, 2026
   todayEmoji: '📍',
   milestones: [
-    { date: new Date(2025, 10, 20), label: 'Start', emoji: '🌱', description: 'Start of first trimester' },
+    { date: new Date(2025, 10, 20), label: 'Start', emoji: '🌱', color: 'teal', description: 'Start of first trimester' },
     { date: new Date(2025, 11, 24), label: 'Discovery', emoji: '🕵️‍♀️', color: 'gold' },
     { date: new Date(2025, 11, 28), label: 'Hospital Scan', emoji: '🏥', description: 'Confirmed heartbeat and normal implantation' },
     { date: new Date(2026, 0, 6), label: 'Dr Rodin', emoji: '👨‍⚕️' },
     { date: new Date(2026, 0, 23), label: 'Blood Tests', emoji: '🩸', description: '10 week blood tests which should reveal gender and any adverse genetic issues' },
-    { date: new Date(2026, 1, 12), label: 'Announce!', emoji: '📢', color: 'purple', description: 'Start of second trimester' },
+    { date: new Date(2026, 1, 12), label: 'Announce!', emoji: '📢', color: 'teal', description: 'Start of second trimester' },
     { date: new Date(2026, 2, 10), label: "James' Baby Due", emoji: '👶' },
     { date: new Date(2026, 2, 29), label: "Vishal's Baby Due", emoji: '👶' },
     { date: new Date(2026, 3, 12), label: 'Engagement Party', emoji: '🎉', color: 'orange' },
