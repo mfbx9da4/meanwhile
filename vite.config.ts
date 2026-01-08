@@ -1,6 +1,12 @@
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'child_process'
+
+// Git info for version checking
+const gitCommit = execSync('git rev-parse --short HEAD').toString().trim()
+const gitDate = execSync('git log -1 --format=%ci').toString().trim()
+const gitMessage = execSync('git log -1 --format=%s').toString().trim()
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -72,4 +78,9 @@ export default defineConfig({
     })
   ],
   base: '/pv7x/',
+  define: {
+    __GIT_COMMIT__: JSON.stringify(gitCommit),
+    __GIT_DATE__: JSON.stringify(gitDate),
+    __GIT_MESSAGE__: JSON.stringify(gitMessage),
+  },
 })

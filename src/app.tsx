@@ -109,15 +109,20 @@ const getViewportSize = () => ({
 
 const LONG_PRESS_DURATION = 400
 const LONG_PRESS_MOVE_THRESHOLD = 10
+const VERSION_TAP_COUNT = 5
+const VERSION_TAP_TIMEOUT = 500
 
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
   const [pressingIndex, setPressingIndex] = useState<number | null>(null)
+  const [showVersion, setShowVersion] = useState(false)
 
   const pressTimer = useRef<number | null>(null)
   const pressStart = useRef<{ x: number; y: number } | null>(null)
+  const versionTapCount = useRef(0)
+  const versionTapTimer = useRef<number | null>(null)
 
   useEffect(() => {
     const handleResize = () => setWindowSize(getViewportSize())
@@ -198,6 +203,22 @@ export function App() {
   const handlePointerUp = useCallback(() => {
     cancelPress()
   }, [cancelPress])
+
+  const handleVersionTap = useCallback(() => {
+    if (versionTapTimer.current) {
+      clearTimeout(versionTapTimer.current)
+    }
+    versionTapCount.current++
+    if (versionTapCount.current >= VERSION_TAP_COUNT) {
+      versionTapCount.current = 0
+      haptic()
+      setShowVersion(true)
+    } else {
+      versionTapTimer.current = window.setTimeout(() => {
+        versionTapCount.current = 0
+      }, VERSION_TAP_TIMEOUT)
+    }
+  }, [])
 
   // Cycle annotation display on mobile
   useEffect(() => {
@@ -314,11 +335,14 @@ export function App() {
           </div>
         ))}
       </div>
-      <div class="info">
+      <div class="info" onClick={handleVersionTap}>
         <span>Week {currentWeek}, Day {currentDayInWeek}</span>
         <span>{progressPercent}%</span>
         <span>{timeRemaining}</span>
       </div>
+      {showVersion && (
+        <VersionPopover onClose={() => setShowVersion(false)} />
+      )}
       {tooltip && (
         <Tooltip
           day={tooltip.day}
@@ -386,6 +410,32 @@ function Tooltip({ day, position, windowSize }: {
       <div class="tooltip-date">{fullDate}</div>
       <div class="tooltip-week">Week {weekNum}, Day {(day.index % 7) + 1}</div>
       {day.annotation && <div class="tooltip-annotation" style={{ color }}>{day.annotation}</div>}
+    </div>
+  )
+}
+
+function VersionPopover({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div class="version-popover" onClick={onClose}>
+      <div class="version-content">
+        <div class="version-row">
+          <span class="version-label">Commit</span>
+          <span class="version-value">{__GIT_COMMIT__}</span>
+        </div>
+        <div class="version-row">
+          <span class="version-label">Date</span>
+          <span class="version-value">{__GIT_DATE__}</span>
+        </div>
+        <div class="version-row">
+          <span class="version-label">Message</span>
+          <span class="version-value">{__GIT_MESSAGE__}</span>
+        </div>
+      </div>
     </div>
   )
 }
