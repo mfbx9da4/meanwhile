@@ -1,5 +1,6 @@
 import { useMemo } from 'preact/hooks'
 import type { DayInfo } from './types'
+import { LAYOUT } from './constants'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -29,8 +30,6 @@ export function WeeklyView({
   onDayPointerDown,
   selectedDayIndex,
 }: WeeklyViewProps) {
-  const labelSpace = 42
-
   const startDayOfWeek = (startDate.getDay() + 3) % 7
   const totalDays = days.length
   const totalWeeks = Math.ceil((startDayOfWeek + totalDays) / 7)
@@ -63,9 +62,7 @@ export function WeeklyView({
   }, [totalDays, startDayOfWeek, totalWeeks, startDate])
 
   const { cellSize, labelSize, gap } = useMemo(() => {
-    const padding = 10
-    const monthLabelSpace = 16
-    const gapSize = 2
+    const { padding, weeklyGridGap, weekLabelWidth, monthLabelHeight, dayLabelHeight } = LAYOUT
 
     let availableWidth: number
     let availableHeight: number
@@ -73,25 +70,28 @@ export function WeeklyView({
     let numRows: number
 
     if (isLandscape) {
-      availableWidth = windowSize.width - padding * 2 - labelSpace
-      availableHeight = windowSize.height - 80 - padding * 2 - monthLabelSpace
+      availableWidth = windowSize.width - padding * 2 - weekLabelWidth
+      availableHeight = windowSize.height - padding * 2 - monthLabelHeight
       numCols = totalWeeks
       numRows = 7
     } else {
-      availableWidth = windowSize.width - padding * 2 - labelSpace
-      availableHeight = windowSize.height - 80 - padding * 2 - monthLabelSpace
+      // Portrait: grid has [auto, 7 cells, auto] columns and [auto header, N cell rows]
+      // Account for both side columns (week nums + month labels ~same width)
+      availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2
+      // Only subtract dayLabelHeight for header row (month labels are in a column, not row)
+      availableHeight = windowSize.height - padding * 2 - dayLabelHeight
       numCols = 7
       numRows = totalWeeks
     }
 
-    const maxCellWidth = (availableWidth - gapSize * (numCols - 1)) / numCols
-    const maxCellHeight = (availableHeight - gapSize * (numRows - 1)) / numRows
+    const maxCellWidth = (availableWidth - weeklyGridGap * (numCols - 1)) / numCols
+    const maxCellHeight = (availableHeight - weeklyGridGap * (numRows - 1)) / numRows
     const size = Math.min(maxCellWidth, maxCellHeight)
 
     return {
       cellSize: Math.max(size, 8),
       labelSize: Math.max(8, Math.min(11, size * 0.4)),
-      gap: gapSize,
+      gap: weeklyGridGap,
     }
   }, [windowSize, isLandscape, totalWeeks])
 
@@ -119,7 +119,7 @@ export function WeeklyView({
     const gridWidth = totalWeeks * cellSize + (totalWeeks - 1) * gap
 
     return (
-      <div class="weekly-view landscape">
+      <div class="weekly-view landscape" style={{ padding: `${LAYOUT.padding}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
         <div class="weekly-body">
           <div class="weekly-day-labels" style={{ gap: `${gap}px`, marginTop: `${labelSize + 4}px` }}>
             {usedDayLabels.map((label, i) => (
@@ -207,15 +207,14 @@ export function WeeklyView({
     const monthByWeek = new Map(weekLabels.filter(l => l.month).map(l => [l.position, l.month]))
 
     return (
-      <div class="weekly-view portrait">
+      <div class="weekly-view portrait" style={{ padding: `${LAYOUT.padding}px` }}>
         <div
           class="weekly-unified-grid"
           style={{
             gap: `${gap}px`,
             fontSize: `${labelSize}px`,
-            gridTemplateColumns: 'auto repeat(7, 1fr) auto',
-            gridTemplateRows: `auto ${'1fr '.repeat(totalWeeks).trim()}`,
-            aspectRatio: `7 / ${totalWeeks}`,
+            gridTemplateColumns: `auto repeat(7, ${cellSize}px) auto`,
+            gridTemplateRows: `auto repeat(${totalWeeks}, ${cellSize}px)`,
           }}
         >
           <div class="weekly-corner" />

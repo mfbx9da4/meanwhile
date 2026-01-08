@@ -80,8 +80,6 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  gap: 3px;
-  padding: 10px;
 }
 
 .day {
@@ -435,7 +433,6 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px;
   overflow: hidden;
 }
 

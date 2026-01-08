@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'preact/hooks'
+import { useMemo, useState, useEffect, useCallback, useRef } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import { FillView } from './FillView'
 import { WeeklyView } from './WeeklyView'
@@ -38,6 +38,8 @@ const getViewportSize = () => ({
 
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
+  const [contentSize, setContentSize] = useState<{ width: number; height: number } | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
   const [showVersion, setShowVersion] = useState(false)
@@ -45,12 +47,19 @@ export function App() {
   const handleVersionTap = useVersionTap(() => setShowVersion(true))
 
   useEffect(() => {
-    const handleResize = () => setWindowSize(getViewportSize())
-    window.addEventListener('resize', handleResize)
-    window.visualViewport?.addEventListener('resize', handleResize)
+    const updateSizes = () => {
+      setWindowSize(getViewportSize())
+      if (contentRef.current) {
+        const rect = contentRef.current.getBoundingClientRect()
+        setContentSize({ width: rect.width, height: rect.height })
+      }
+    }
+    updateSizes()
+    window.addEventListener('resize', updateSizes)
+    window.visualViewport?.addEventListener('resize', updateSizes)
     return () => {
-      window.removeEventListener('resize', handleResize)
-      window.visualViewport?.removeEventListener('resize', handleResize)
+      window.removeEventListener('resize', updateSizes)
+      window.visualViewport?.removeEventListener('resize', updateSizes)
     }
   }, [])
 
@@ -154,26 +163,28 @@ export function App() {
 
   return (
     <div class="container">
-      {viewMode === 'fill' ? (
-        <FillView
-          days={days}
-          windowSize={windowSize}
-          showAnnotationDate={showAnnotationDate}
-          selectedDayIndex={tooltip?.day.index ?? null}
-          startDate={CONFIG.startDate}
-          annotationEmojis={ANNOTATION_EMOJIS}
-          onDayPointerDown={handleDayPointerDown}
-        />
-      ) : (
-        <WeeklyView
-          days={days}
-          windowSize={windowSize}
-          isLandscape={isLandscape}
-          startDate={CONFIG.startDate}
-          onDayPointerDown={handleDayPointerDown}
-          selectedDayIndex={tooltip?.day.index ?? null}
-        />
-      )}
+      <div ref={contentRef} style={{ flex: 1, overflow: 'hidden' }}>
+        {contentSize && (viewMode === 'fill' ? (
+          <FillView
+            days={days}
+            windowSize={contentSize}
+            showAnnotationDate={showAnnotationDate}
+            selectedDayIndex={tooltip?.day.index ?? null}
+            startDate={CONFIG.startDate}
+            annotationEmojis={ANNOTATION_EMOJIS}
+            onDayPointerDown={handleDayPointerDown}
+          />
+        ) : (
+          <WeeklyView
+            days={days}
+            windowSize={contentSize}
+            isLandscape={isLandscape}
+            startDate={CONFIG.startDate}
+            onDayPointerDown={handleDayPointerDown}
+            selectedDayIndex={tooltip?.day.index ?? null}
+          />
+        ))}
+      </div>
       <InfoBar
         viewMode={viewMode}
         currentWeek={currentWeek}

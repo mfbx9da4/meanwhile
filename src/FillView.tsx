@@ -1,5 +1,6 @@
 import { useMemo } from 'preact/hooks'
 import type { DayInfo } from './types'
+import { LAYOUT } from './constants'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -76,7 +77,7 @@ export function FillView({
   onDayPointerDown,
 }: FillViewProps) {
   const totalDays = days.length
-  const availableWidth = windowSize.width - 20
+  const availableWidth = windowSize.width - LAYOUT.padding * 2
   const availableHeight = windowSize.height
 
   const { cols, rows } = useMemo(
@@ -101,6 +102,8 @@ export function FillView({
       style={{
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
+        padding: `${LAYOUT.padding}px`,
+        gap: `${LAYOUT.gridGap}px`,
       }}
     >
       {days.map((day) => (

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import type { ViewMode } from './useViewMode'
+import { LAYOUT } from './constants'
 
 declare const __GIT_COMMIT__: string
 declare const __GIT_DATE__: string
@@ -52,7 +53,7 @@ export function InfoBar({
   onVersionTap,
 }: InfoBarProps) {
   return (
-    <div class="info">
+    <div class="info" style={{ height: `${LAYOUT.infoBar.height}px` }}>
       <button class="view-toggle" onClick={onToggleView} aria-label="Toggle view">
         {viewMode === 'fill' ? (
           <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
