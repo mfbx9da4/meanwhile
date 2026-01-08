@@ -452,9 +452,11 @@
 /* Unified grid for portrait - labels integrated into the grid */
 .weekly-unified-grid {
   display: grid;
-  flex: 1;
-  align-content: center;
-  justify-content: center;
+  justify-self: center;
+  align-self: center;
+  max-height: 100%;
+  max-width: 100%;
+  /* grid-template and aspect-ratio set via inline style for dynamic row count */
 }
 
 .weekly-unified-grid .weekly-day-label {
@@ -598,6 +600,7 @@
   -webkit-user-select: none;
   cursor: pointer;
   transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+  aspect-ratio: 1;
 }
 
 .weekly-cell.empty {

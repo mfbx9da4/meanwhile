@@ -599,10 +599,11 @@ function WeeklyView({
         <div
           class="weekly-unified-grid"
           style={{
-            gridTemplateColumns: `auto repeat(7, ${cellSize}px) auto`,
-            gridTemplateRows: `auto repeat(${totalWeeks}, ${cellSize}px)`,
             gap: `${gap}px`,
             fontSize: `${labelSize}px`,
+            gridTemplateColumns: 'auto repeat(7, 1fr) auto',
+            gridTemplateRows: `auto ${'1fr '.repeat(totalWeeks).trim()}`,
+            aspectRatio: `7 / ${totalWeeks}`,
           }}
         >
           {/* Header row: empty corner, day labels, empty corner */}
