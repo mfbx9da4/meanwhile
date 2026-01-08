@@ -10,6 +10,7 @@ export const CONFIG = {
     { date: new Date(2026, 0, 23), label: 'Blood Tests', emoji: '🩸', description: '10 week blood tests which should reveal gender and any adverse genetic issues' },
     { date: new Date(2026, 1, 12), label: 'Announce!', emoji: '📢', color: 'purple', description: 'Start of second trimester (week 13)' },
     { date: new Date(2026, 3, 12), label: 'Engagement Party', emoji: '🎉', color: 'orange' },
+    { date: new Date(2026, 3, 26), label: "Seb's Baby Due", emoji: '👶' },
     { date: new Date(2026, 4, 28), label: 'Third Trimester', emoji: '🤰', color: 'teal', description: 'Start of third trimester (week 28)' },
     { date: new Date(2026, 5, 7), label: 'Dan & Bex Wedding', emoji: '💒', color: 'pink' },
     { date: new Date(2026, 6, 12), label: 'Anika Wedding', emoji: '🦖', color: 'pink' },
