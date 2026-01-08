@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#2d5a3d"/>
+
+  <!-- 4x4 Grid of cells showing progress -->
+  <!-- Using greens from the app: #337d4b (dark), #4a9c68 (medium), #5fb87d (light), #7dcea0 (lightest) -->
+  <!-- Gap: 12px, Cell size: ~100px, Starting offset: ~46px -->
+
+  <!-- Row 1 - all passed (darkest to lighter) -->
+  <rect x="46" y="46" width="100" height="100" rx="12" fill="#337d4b"/>
+  <rect x="158" y="46" width="100" height="100" rx="12" fill="#398553"/>
+  <rect x="270" y="46" width="100" height="100" rx="12" fill="#4a9c68"/>
+  <rect x="382" y="46" width="100" height="100" rx="12" fill="#5fb87d"/>
+
+  <!-- Row 2 - passed -->
+  <rect x="46" y="158" width="100" height="100" rx="12" fill="#398553"/>
+  <rect x="158" y="158" width="100" height="100" rx="12" fill="#4a9c68"/>
+  <rect x="270" y="158" width="100" height="100" rx="12" fill="#5fb87d"/>
+  <rect x="382" y="158" width="100" height="100" rx="12" fill="#7dcea0"/>
+
+  <!-- Row 3 - partially passed -->
+  <rect x="46" y="270" width="100" height="100" rx="12" fill="#4a9c68"/>
+  <rect x="158" y="270" width="100" height="100" rx="12" fill="#5fb87d"/>
+  <rect x="270" y="270" width="100" height="100" rx="12" fill="#7dcea0"/>
+  <rect x="382" y="270" width="100" height="100" rx="12" fill="#a8e6c3"/>
+
+  <!-- Row 4 - future (lightest greens / hints of white) -->
+  <rect x="46" y="382" width="100" height="100" rx="12" fill="#5fb87d"/>
+  <rect x="158" y="382" width="100" height="100" rx="12" fill="#7dcea0"/>
+  <rect x="270" y="382" width="100" height="100" rx="12" fill="#a8e6c3"/>
+  <rect x="382" y="382" width="100" height="100" rx="12" fill="#c8f0d8"/>
+</svg>

@@ -14,10 +14,10 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.svg'],
+      includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Baby Tracker',
-        short_name: 'BabyTracker',
+        name: 'Meanwhile',
+        short_name: 'Meanwhile',
         description: 'Pregnancy progress tracker',
         theme_color: '#2d5a3d',
         background_color: '#f2f2f7',
@@ -25,18 +25,13 @@ export default defineConfig({
         orientation: 'any',
         icons: [
           {
-            src: 'pwa-192x192.svg',
-            sizes: '192x192',
+            src: 'icon.svg',
+            sizes: 'any',
             type: 'image/svg+xml'
           },
           {
-            src: 'pwa-512x512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml'
-          },
-          {
-            src: 'pwa-512x512.svg',
-            sizes: '512x512',
+            src: 'icon.svg',
+            sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'maskable'
           }
@@ -77,7 +72,7 @@ export default defineConfig({
       }
     })
   ],
-  base: '/pv7x/',
+  base: '/meanwhile/',
   define: {
     __GIT_COMMIT__: JSON.stringify(gitCommit),
     __GIT_DATE__: JSON.stringify(gitDate),

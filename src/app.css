@@ -229,6 +229,7 @@
   font-weight: 500;
   letter-spacing: -0.01em;
   flex-shrink: 0;
+  position: relative;
 }
 
 /* Long press feedback - animate opacity to hint "keep holding" */
@@ -394,6 +395,10 @@
 
 /* View toggle button */
 .view-toggle {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -404,7 +409,6 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
-  flex-shrink: 0;
 }
 
 .view-toggle:hover {
