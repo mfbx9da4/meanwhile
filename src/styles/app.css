@@ -82,8 +82,8 @@ body {
 @media (prefers-color-scheme: dark) {
   :root {
     /* Surfaces */
-    --color-background: #121212;
-    --color-surface: #1e1e1e;
+    --color-background: #1c1c1e;
+    --color-surface: #2c2c2e;
     --color-border: #38383a;
 
     /* Text - inverted for dark backgrounds */
@@ -101,7 +101,7 @@ body {
     --color-future-odd: #1c1c1e;
     --color-future-odd-border: #38383a;
     --color-future-even: #2c2c2e;
-    --color-future-even-border: #48484a;
+    --color-future-even-border: #2c2c2e;
 
     /* Uncolored milestones */
     --color-milestone-future: #3a3a3c;
@@ -136,7 +136,7 @@ body {
   }
 
   body {
-    background: #121212;
+    background: #1c1c1e;
   }
 }
 
