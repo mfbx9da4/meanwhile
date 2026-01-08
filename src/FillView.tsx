@@ -78,7 +78,7 @@ export function FillView({
 }: FillViewProps) {
   const totalDays = days.length
   const availableWidth = windowSize.width - LAYOUT.padding * 2
-  const availableHeight = windowSize.height
+  const availableHeight = windowSize.height - LAYOUT.padding * 2
 
   const { cols, rows } = useMemo(
     () => calculateGrid(totalDays, availableWidth, availableHeight),
@@ -86,8 +86,11 @@ export function FillView({
   )
 
   const cellSize = useMemo(() => {
-    const cellWidth = availableWidth / cols
-    const cellHeight = availableHeight / rows
+    // Account for gaps between cells
+    const totalGapWidth = LAYOUT.gridGap * (cols - 1)
+    const totalGapHeight = LAYOUT.gridGap * (rows - 1)
+    const cellWidth = (availableWidth - totalGapWidth) / cols
+    const cellHeight = (availableHeight - totalGapHeight) / rows
     return Math.min(cellWidth, cellHeight)
   }, [availableWidth, availableHeight, cols, rows])
 
@@ -104,6 +107,7 @@ export function FillView({
         gridTemplateRows: `repeat(${rows}, 1fr)`,
         padding: `${LAYOUT.padding}px`,
         gap: `${LAYOUT.gridGap}px`,
+        height: '100%',
       }}
     >
       {days.map((day) => (

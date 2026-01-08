@@ -1,4 +1,5 @@
-import { useState, useEffect, RefObject } from 'preact/hooks'
+import { useState, useEffect } from 'preact/hooks'
+import type { RefObject } from 'preact'
 
 export function useContentSize(contentRef: RefObject<HTMLDivElement>) {
   const [contentSize, setContentSize] = useState<{ width: number; height: number } | null>(null)

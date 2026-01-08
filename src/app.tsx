@@ -44,7 +44,6 @@ export function App() {
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
   const [showVersion, setShowVersion] = useState(false)
-  const [showDebug, setShowDebug] = useState(false)
   const [viewMode, setViewMode] = useViewMode()
   const handleVersionTap = useVersionTap(() => setShowVersion(true))
 
@@ -177,7 +176,6 @@ export function App() {
             startDate={CONFIG.startDate}
             onDayPointerDown={handleDayPointerDown}
             selectedDayIndex={tooltip?.day.index ?? null}
-            showDebug={showDebug}
           />
         ))}
       </div>
@@ -189,7 +187,6 @@ export function App() {
         timeRemaining={timeRemaining}
         onToggleView={toggleViewMode}
         onVersionTap={handleVersionTap}
-        onDebugTap={() => setShowDebug(d => !d)}
       />
       {showVersion && (
         <VersionPopover onClose={() => setShowVersion(false)} />

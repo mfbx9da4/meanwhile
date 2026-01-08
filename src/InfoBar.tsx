@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import type { ViewMode } from './useViewMode'
-import { LAYOUT } from './constants'
 
 declare const __GIT_COMMIT__: string
 declare const __GIT_DATE__: string
@@ -41,7 +40,6 @@ type InfoBarProps = {
   timeRemaining: string
   onToggleView: () => void
   onVersionTap: () => void
-  onDebugTap: () => void
 }
 
 export function InfoBar({
@@ -52,7 +50,6 @@ export function InfoBar({
   timeRemaining,
   onToggleView,
   onVersionTap,
-  onDebugTap,
 }: InfoBarProps) {
   return (
     <div class="info">
@@ -79,7 +76,7 @@ export function InfoBar({
       </button>
       <span class="info-text">Week {currentWeek}, Day {currentDayInWeek}</span>
       <span class="info-text" onClick={onVersionTap}>{progressPercent}%</span>
-      <span class="info-text" onClick={onDebugTap}>{timeRemaining}</span>
+      <span class="info-text">{timeRemaining}</span>
     </div>
   )
 }
