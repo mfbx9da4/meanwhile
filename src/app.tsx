@@ -170,12 +170,17 @@ export function App() {
 
   const handleDayClick = useCallback((e: PointerEvent, day: DayInfo) => {
     e.stopPropagation()
+    // If tooltip is already open, just close it
+    if (tooltip) {
+      setTooltip(null)
+      return
+    }
     haptic()
     setTooltip({
       day,
       position: { x: e.clientX, y: e.clientY }
     })
-  }, [])
+  }, [tooltip])
 
   const handleVersionTap = useCallback(() => {
     if (versionTapTimer.current) {
