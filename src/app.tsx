@@ -10,6 +10,7 @@ type DayInfo = {
   isOddWeek: boolean
   dateLabel: string
   annotation: string
+  isUncoloredMilestone: boolean  // milestone without a specified color
 }
 
 type TooltipState = {
@@ -272,6 +273,7 @@ export function App() {
         isOddWeek: weekNum % 2 === 1,
         dateLabel: i % 7 === 0 ? `${formatDate(date)} (${weekNum})` : formatDate(date),
         annotation,
+        isUncoloredMilestone: !!milestone && !color,
       }
     })
   }, [totalDays, daysPassed, milestoneLookup])
@@ -305,7 +307,7 @@ export function App() {
           {days.map((day) => (
             <div
               key={day.index}
-              class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''}`}
+              class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''}`}
               style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
               onPointerDown={(e) => handleDayPointerDown(e as unknown as PointerEvent, day)}
             >
@@ -543,7 +545,7 @@ function WeeklyView({
                 return day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
+                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
                     style={{
                       gridColumn: weekIndex + 1,
                       gridRow: dayOfWeek + 1,
@@ -618,7 +620,7 @@ function WeeklyView({
                 day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
+                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
                     style={day.color ? { background: `var(--color-${day.color})` } : undefined}
                     onPointerDown={(e) => onDayPointerDown(e as unknown as PointerEvent, day)}
                   />

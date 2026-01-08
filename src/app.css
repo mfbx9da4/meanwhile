@@ -7,17 +7,24 @@
   --color-passed-odd: #5fb87d;
   --color-passed-even: #4a9c68;
 
+  /* Uncolored milestone passed days (slightly darker green) */
+  --color-milestone-passed: #337d4b;
+
   /* Future days */
   --color-future-odd: #ffffff;
   --color-future-odd-border: #e5e5ea;
   --color-future-even: #f0f0f5;
   --color-future-even-border: #d1d1d6;
 
+  /* Uncolored milestone future days (slightly darker grey) */
+  --color-milestone-future: #d8d8dd;
+  --color-milestone-future-border: #c7c7cc;
+
   /* Milestone colors (named by actual color) */
   --color-pink: #d64d7a;
   --color-purple: #8944ab;
   --color-orange: #f5a623;
-  --color-teal: #00a896;
+  --color-teal: #00b8d4;
   --color-blue: #2d9cdb;
   --color-red: #e05550;
   --color-gold: #d4a83c;
@@ -105,6 +112,16 @@
 }
 
 /* Milestone days - background color applied inline via style attribute */
+
+/* Uncolored milestone days (milestones without a specified color) */
+.day.uncolored-milestone.passed {
+  background: var(--color-milestone-passed);
+}
+
+.day.uncolored-milestone.future {
+  background: var(--color-milestone-future);
+  border: 1px solid var(--color-milestone-future-border);
+}
 
 .day.today.odd-week {
   animation: pulse-bg-odd 4s ease-in-out infinite;
@@ -544,10 +561,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  width: 20px;
   color: var(--color-text-tertiary);
   font-weight: 500;
   padding-right: 4px;
+  line-height: 1;
 }
 
 /* Day labels - portrait (horizontal row at top) */
@@ -600,6 +617,16 @@
 .weekly-cell.future.even-week {
   background: var(--color-future-even);
   border: 1px solid var(--color-future-even-border);
+}
+
+/* Uncolored milestone cells */
+.weekly-cell.uncolored-milestone.passed {
+  background: var(--color-milestone-passed);
+}
+
+.weekly-cell.uncolored-milestone.future {
+  background: var(--color-milestone-future);
+  border: 1px solid var(--color-milestone-future-border);
 }
 
 .weekly-cell.today.odd-week {
