@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks'
+import { haptic } from 'ios-haptics'
 import './app.css'
 
 type DayInfo = {
@@ -159,10 +160,8 @@ export function App() {
     setPressingIndex(day.index)
 
     pressTimer.current = window.setTimeout(() => {
-      // Haptic feedback on successful long press
-      if ('vibrate' in navigator) {
-        navigator.vibrate(10)
-      }
+      // Haptic feedback on successful long press (works on iOS 18+ and Android)
+      haptic()
       setTooltip({
         day,
         position: { x: e.clientX, y: e.clientY }

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "ios-haptics": "^0.1.4",
     "preact": "^10.27.2"
   },
   "devDependencies": {
