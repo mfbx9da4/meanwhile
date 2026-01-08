@@ -114,11 +114,8 @@ const getViewportSize = () => ({
   height: window.visualViewport?.height ?? window.innerHeight,
 })
 
-const LONG_PRESS_DURATION = 400
-const LONG_PRESS_MOVE_THRESHOLD = 10
 const VERSION_TAP_COUNT = 5
 const VERSION_TAP_TIMEOUT = 500
-const DOUBLE_TAP_TIMEOUT = 300
 
 type ViewMode = 'grid' | 'calendar'
 
@@ -140,15 +137,11 @@ export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
-  const [pressingIndex, setPressingIndex] = useState<number | null>(null)
   const [showVersion, setShowVersion] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode)
 
-  const pressTimer = useRef<number | null>(null)
-  const pressStart = useRef<{ x: number; y: number } | null>(null)
   const versionTapCount = useRef(0)
   const versionTapTimer = useRef<number | null>(null)
-  const lastTap = useRef<{ time: number; index: number } | null>(null)
 
   useEffect(() => {
     const handleResize = () => setWindowSize(getViewportSize())
@@ -175,65 +168,14 @@ export function App() {
     return () => clearTimeout(timer)
   }, [tooltip])
 
-  const cancelPress = useCallback(() => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current)
-      pressTimer.current = null
-    }
-    pressStart.current = null
-    setPressingIndex(null)
-  }, [])
-
-  const handlePointerDown = useCallback((e: PointerEvent, day: DayInfo) => {
+  const handleDayClick = useCallback((e: PointerEvent, day: DayInfo) => {
     e.stopPropagation()
-    cancelPress()
-    setTooltip(null)
-
-    const now = Date.now()
-
-    // Check for double-tap
-    if (lastTap.current &&
-        lastTap.current.index === day.index &&
-        now - lastTap.current.time < DOUBLE_TAP_TIMEOUT) {
-      // Double-tap detected
-      lastTap.current = null
-      haptic()
-      setTooltip({
-        day,
-        position: { x: e.clientX, y: e.clientY }
-      })
-      return
-    }
-
-    lastTap.current = { time: now, index: day.index }
-
-    pressStart.current = { x: e.clientX, y: e.clientY }
-    setPressingIndex(day.index)
-
-    pressTimer.current = window.setTimeout(() => {
-      // Haptic feedback on successful long press (works on iOS 18+ and Android)
-      haptic()
-      setTooltip({
-        day,
-        position: { x: e.clientX, y: e.clientY }
-      })
-      setPressingIndex(null)
-      pressTimer.current = null
-    }, LONG_PRESS_DURATION)
-  }, [cancelPress])
-
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    if (!pressStart.current) return
-    const dx = e.clientX - pressStart.current.x
-    const dy = e.clientY - pressStart.current.y
-    if (Math.sqrt(dx * dx + dy * dy) > LONG_PRESS_MOVE_THRESHOLD) {
-      cancelPress()
-    }
-  }, [cancelPress])
-
-  const handlePointerUp = useCallback(() => {
-    cancelPress()
-  }, [cancelPress])
+    haptic()
+    setTooltip({
+      day,
+      position: { x: e.clientX, y: e.clientY }
+    })
+  }, [])
 
   const handleVersionTap = useCallback(() => {
     if (versionTapTimer.current) {
@@ -356,13 +298,9 @@ export function App() {
           {days.map((day) => (
             <div
               key={day.index}
-              class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''} ${day.annotation ? 'has-annotation' : ''}`}
+              class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''}`}
               style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
-              onPointerDown={(e) => handlePointerDown(e as unknown as PointerEvent, day)}
-              onPointerMove={(e) => handlePointerMove(e as unknown as PointerEvent)}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={cancelPress}
-              onPointerLeave={cancelPress}
+              onClick={(e) => handleDayClick(e as unknown as PointerEvent, day)}
             >
               {day.annotation ? (
                 cellSize >= 50 ? (
@@ -387,11 +325,7 @@ export function App() {
           days={days}
           windowSize={windowSize}
           isLandscape={isLandscape}
-          onDayPress={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          cancelPress={cancelPress}
-          pressingIndex={pressingIndex}
+          onDayClick={handleDayClick}
         />
       )}
       <div class="info">
@@ -441,20 +375,12 @@ function CalendarView({
   days,
   windowSize,
   isLandscape,
-  onDayPress,
-  onPointerMove,
-  onPointerUp,
-  cancelPress,
-  pressingIndex,
+  onDayClick,
 }: {
   days: DayInfo[]
   windowSize: { width: number; height: number }
   isLandscape: boolean
-  onDayPress: (e: PointerEvent, day: DayInfo) => void
-  onPointerMove: (e: PointerEvent) => void
-  onPointerUp: () => void
-  cancelPress: () => void
-  pressingIndex: number | null
+  onDayClick: (e: PointerEvent, day: DayInfo) => void
 }) {
   const labelSpace = 24 // space for day labels (used in JSX)
 
@@ -597,17 +523,13 @@ function CalendarView({
                 return day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''}`}
+                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
                     style={{
                       gridColumn: weekIndex + 1,
                       gridRow: dayOfWeek + 1,
                       ...(day.color ? { background: `var(--color-${day.color})` } : {}),
                     }}
-                    onPointerDown={(e) => onDayPress(e as unknown as PointerEvent, day)}
-                    onPointerMove={(e) => onPointerMove(e as unknown as PointerEvent)}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={cancelPress}
-                    onPointerLeave={cancelPress}
+                    onClick={(e) => onDayClick(e as unknown as PointerEvent, day)}
                   />
                 ) : (
                   <div
@@ -681,13 +603,9 @@ function CalendarView({
                 day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''}`}
+                    class={`calendar-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''}`}
                     style={day.color ? { background: `var(--color-${day.color})` } : undefined}
-                    onPointerDown={(e) => onDayPress(e as unknown as PointerEvent, day)}
-                    onPointerMove={(e) => onPointerMove(e as unknown as PointerEvent)}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={cancelPress}
-                    onPointerLeave={cancelPress}
+                    onClick={(e) => onDayClick(e as unknown as PointerEvent, day)}
                   />
                 ) : (
                   <div
