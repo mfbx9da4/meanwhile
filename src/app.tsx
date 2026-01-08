@@ -27,7 +27,7 @@ const CONFIG = {
   milestones: [
     { date: new Date(2025, 10, 20), label: 'Start', emoji: '🌱' },
     { date: new Date(2025, 11, 24), label: 'Discovery', emoji: '🕵️‍♀️', style: 'discovery' },
-    { date: new Date(2025, 11, 28), label: 'Hospital Scan', emoji: '🏥' },
+    { date: new Date(2025, 11, 28), label: 'Hospital Scan', emoji: '🏥', description: 'Confirmed heartbeat and normal implantation' },
     { date: new Date(2026, 0, 6), label: 'Dr Rodin', emoji: '👨‍⚕️' },
     { date: new Date(2026, 0, 23), label: 'Blood Tests', emoji: '🩸', description: '10 week blood tests which should reveal gender and any adverse genetic issues' },
     { date: new Date(2026, 1, 5), label: 'Announce!', emoji: '📢', style: 'announcement' },
