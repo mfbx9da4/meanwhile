@@ -17,6 +17,7 @@
   --color-discovery: #d64d7a;
   --color-announcement: #8944ab;
   --color-engagement: #f5a623;
+  --color-c-section: #2d9cdb;
   --color-due-date: #e05550;
 
   /* Surfaces */
@@ -102,6 +103,10 @@
   background: var(--color-engagement);
 }
 
+.day.day.day.c-section {
+  background: var(--color-c-section);
+}
+
 .day.day.day.due-date {
   background: var(--color-due-date);
 }
@@ -137,6 +142,7 @@
 .day.discovery .date-label,
 .day.announcement .date-label,
 .day.engagement .date-label,
+.day.c-section .date-label,
 .day.due-date .date-label {
   color: var(--color-text-on-color);
   text-shadow: 0 1px 2px var(--shadow-text);
@@ -193,6 +199,8 @@
 .day.announcement .annotation-date,
 .day.engagement .annotation-text,
 .day.engagement .annotation-date,
+.day.c-section .annotation-text,
+.day.c-section .annotation-date,
 .day.due-date .annotation-text,
 .day.due-date .annotation-date {
   color: var(--color-text-on-color);
