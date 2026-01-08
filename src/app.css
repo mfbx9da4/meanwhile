@@ -28,6 +28,7 @@
   --color-blue: #2d9cdb;
   --color-red: #e05550;
   --color-gold: #d4a83c;
+  --color-salmon: #d4908f;
 
   /* Milestone text colors (light tinted shades for text on colored backgrounds) */
   --color-pink-text: #ffeef3;
@@ -37,6 +38,7 @@
   --color-blue-text: #e3f2fd;
   --color-red-text: #ffebee;
   --color-gold-text: #4a3c00;
+  --color-salmon-text: #fff5f5;
 
   /* Surfaces */
   --color-background: #f2f2f7;

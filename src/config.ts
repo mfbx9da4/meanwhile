@@ -12,7 +12,7 @@ export const CONFIG = {
     { date: new Date(2026, 3, 12), label: 'Engagement Party', emoji: '🎉', color: 'orange' },
     { date: new Date(2026, 4, 28), label: 'Third Trimester', emoji: '🤰', color: 'teal', description: 'Start of third trimester (week 28)' },
     { date: new Date(2026, 5, 7), label: 'Dan & Bex Wedding', emoji: '💒', color: 'gold' },
-    { date: new Date(2026, 7, 13), label: 'C Section', emoji: '🥗', color: 'blue', description: 'Potential scheduled date of Caesarean section birth' },
+    { date: new Date(2026, 7, 13), label: 'C Section', emoji: '🥗', color: 'salmon', description: 'Potential scheduled date of Caesarean section birth' },
     { date: new Date(2026, 7, 20), label: 'Due', emoji: '👶', color: 'red' },
   ],
 }
