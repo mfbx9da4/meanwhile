@@ -402,41 +402,29 @@ function WeeklyView({
 
   // Calculate week labels with week numbers and month when a new month starts
   const weekLabels = useMemo(() => {
-    const labels: { weekNum: number; month?: string; position: number }[] = []
-    const monthStarts: Set<number> = new Set()
-
-    // First pass: find which weeks have month starts
+    // First, build a map of weekIndex -> month name for weeks where a new month starts
+    const monthStartsInWeek: Map<number, string> = new Map()
     let lastMonth = -1
+
     for (let i = 0; i < totalDays; i++) {
       const date = addDays(CONFIG.startDate, i)
       const month = date.getMonth()
       if (month !== lastMonth) {
         const weekIndex = Math.floor((startDayOfWeek + i) / 7)
-        monthStarts.add(weekIndex)
+        // Only set if not already set (keep the first month that starts in this week)
+        if (!monthStartsInWeek.has(weekIndex)) {
+          monthStartsInWeek.set(weekIndex, MONTHS[month])
+        }
         lastMonth = month
       }
     }
 
-    // Second pass: create labels for all weeks
-    lastMonth = -1
+    // Create labels for all weeks
+    const labels: { weekNum: number; month?: string; position: number }[] = []
     for (let week = 0; week < totalWeeks; week++) {
-      // Find the first valid day in this week to get the month
-      let monthForWeek: string | undefined
-      for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-        const dayIndex = week * 7 + dayOfWeek - startDayOfWeek
-        if (dayIndex >= 0 && dayIndex < totalDays) {
-          const date = addDays(CONFIG.startDate, dayIndex)
-          const month = date.getMonth()
-          if (month !== lastMonth && monthStarts.has(week)) {
-            monthForWeek = MONTHS[month]
-            lastMonth = month
-          }
-          break
-        }
-      }
       labels.push({
         weekNum: week + 1,
-        month: monthForWeek,
+        month: monthStartsInWeek.get(week),
         position: week,
       })
     }
