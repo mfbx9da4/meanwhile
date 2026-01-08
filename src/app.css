@@ -199,6 +199,10 @@
   padding: 1px;
 }
 
+.day.has-annotation {
+  cursor: pointer;
+}
+
 /* Tooltip */
 .day-tooltip {
   position: fixed;
@@ -240,6 +244,5 @@
 .tooltip-annotation {
   font-size: 13px;
   font-weight: 600;
-  color: #2d5a3d;
   margin-top: 4px;
 }

@@ -152,6 +152,9 @@ export function App() {
   }, [])
 
   const handlePointerDown = useCallback((e: PointerEvent, day: DayInfo) => {
+    // Only allow long press on days with annotations
+    if (!day.annotation) return
+
     e.stopPropagation()
     cancelPress()
     setTooltip(null)
@@ -271,7 +274,7 @@ export function App() {
         {days.map((day) => (
           <div
             key={day.index}
-            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''}`}
+            class={`day ${day.passed ? 'passed' : 'future'} ${day.isDiscovery ? 'discovery' : ''} ${day.isAnnouncement ? 'announcement' : ''} ${day.isEngagement ? 'engagement' : ''} ${day.isDueDate ? 'due-date' : ''} ${day.isWeekStart ? 'week-start' : ''} ${day.isToday ? 'today' : ''} ${pressingIndex === day.index ? 'pressing' : ''} ${day.annotation ? 'has-annotation' : ''}`}
             onPointerDown={(e) => handlePointerDown(e as unknown as PointerEvent, day)}
             onPointerMove={(e) => handlePointerMove(e as unknown as PointerEvent)}
             onPointerUp={handlePointerUp}
@@ -312,6 +315,16 @@ export function App() {
   )
 }
 
+function getDayColor(day: DayInfo): string {
+  if (day.isDiscovery) return '#d64d7a'
+  if (day.isAnnouncement) return '#8944ab'
+  if (day.isEngagement) return '#f5a623'
+  if (day.isDueDate) return '#e05550'
+  if (day.isToday) return '#2d5a3d'
+  if (day.passed) return day.isWeekStart ? '#4a9c68' : '#5fb87d'
+  return day.isWeekStart ? '#8e8e93' : '#636366'
+}
+
 function Tooltip({ day, position, windowSize }: {
   day: DayInfo
   position: { x: number; y: number }
@@ -321,6 +334,7 @@ function Tooltip({ day, position, windowSize }: {
   const weekNum = Math.floor(day.index / 7) + 1
   const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
   const fullDate = `${dayOfWeek}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
+  const color = getDayColor(day)
 
   // Position tooltip: prefer above the touch point, fall back to below
   const tooltipWidth = 180
@@ -347,11 +361,12 @@ function Tooltip({ day, position, windowSize }: {
       style={{
         left: `${left}px`,
         top: `${top}px`,
+        borderColor: color,
       }}
     >
       <div class="tooltip-date">{fullDate}</div>
       <div class="tooltip-week">Week {weekNum}, Day {(day.index % 7) + 1}</div>
-      {day.annotation && <div class="tooltip-annotation">{day.annotation}</div>}
+      {day.annotation && <div class="tooltip-annotation" style={{ color }}>{day.annotation}</div>}
     </div>
   )
 }
