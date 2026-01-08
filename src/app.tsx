@@ -5,6 +5,7 @@ import { WeeklyView } from './WeeklyView'
 import { InfoBar, VersionPopover, useVersionTap } from './InfoBar'
 import { Tooltip } from './Tooltip'
 import { useViewMode } from './useViewMode'
+import { useContentSize } from './useContentSize'
 import { CONFIG, ANNOTATION_EMOJIS, ANNOTATION_DESCRIPTIONS } from './config'
 import type { DayInfo } from './types'
 import './app.css'
@@ -38,8 +39,8 @@ const getViewportSize = () => ({
 
 export function App() {
   const [windowSize, setWindowSize] = useState(getViewportSize)
-  const [contentSize, setContentSize] = useState<{ width: number; height: number } | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const contentSize = useContentSize(contentRef)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
   const [showVersion, setShowVersion] = useState(false)
@@ -48,22 +49,12 @@ export function App() {
   const handleVersionTap = useVersionTap(() => setShowVersion(true))
 
   useEffect(() => {
-    const updateSizes = () => {
-      setWindowSize(getViewportSize())
-      if (contentRef.current) {
-        const rect = contentRef.current.getBoundingClientRect()
-        setContentSize({ width: rect.width, height: rect.height })
-      }
-    }
-    updateSizes()
-    // Periodic recalc for standalone PWA mode where initial size can be wrong
-    const interval = setInterval(updateSizes, 500)
-    window.addEventListener('resize', updateSizes)
-    window.visualViewport?.addEventListener('resize', updateSizes)
+    const updateSize = () => setWindowSize(getViewportSize())
+    window.addEventListener('resize', updateSize)
+    window.visualViewport?.addEventListener('resize', updateSize)
     return () => {
-      clearInterval(interval)
-      window.removeEventListener('resize', updateSizes)
-      window.visualViewport?.removeEventListener('resize', updateSizes)
+      window.removeEventListener('resize', updateSize)
+      window.visualViewport?.removeEventListener('resize', updateSize)
     }
   }, [])
 

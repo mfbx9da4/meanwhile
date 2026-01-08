@@ -55,7 +55,7 @@ export function InfoBar({
   onDebugTap,
 }: InfoBarProps) {
   return (
-    <div class="info" style={{ height: `${LAYOUT.infoBar.height}px` }}>
+    <div class="info">
       <button class="view-toggle" onClick={onToggleView} aria-label="Toggle view">
         {viewMode === 'fill' ? (
           <svg width="14" height="14" viewBox="0 0 18 18" fill="none">

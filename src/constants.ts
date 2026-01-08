@@ -7,16 +7,8 @@ export const LAYOUT = {
   gridGap: 3,
   weeklyGridGap: 2,
 
-  // Info bar dimensions
-  infoBar: {
-    paddingY: 12,
-    paddingX: 16,
-    // Explicit height (set inline on component)
-    height: 44,
-  },
-
   // Weekly view label dimensions
   weekLabelWidth: 42,
   monthLabelHeight: 16,
   dayLabelHeight: 20,
-}
+};
