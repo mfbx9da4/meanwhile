@@ -134,13 +134,13 @@
 }
 
 @keyframes pulse-bg-odd {
-  0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); }
-  50% { background: var(--color-future-odd); border: 1px solid var(--color-future-odd-border); }
+  0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); color: var(--color-text-on-color); }
+  50% { background: var(--color-future-odd); border: 1px solid var(--color-future-odd-border); color: var(--color-text-primary); }
 }
 
 @keyframes pulse-bg-even {
-  0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); }
-  50% { background: var(--color-future-even); border: 1px solid var(--color-future-even-border); }
+  0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); color: var(--color-text-on-color); }
+  50% { background: var(--color-future-even); border: 1px solid var(--color-future-even-border); color: var(--color-text-primary); }
 }
 
 .date-label {
@@ -215,6 +215,12 @@
 .day.milestone .annotation-date {
   color: inherit;
   text-shadow: 0 1px 2px var(--shadow-text);
+}
+
+.day.today .date-label,
+.day.today .annotation-text,
+.day.today .annotation-date {
+  color: inherit;
 }
 
 .info {
