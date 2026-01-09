@@ -1,4 +1,4 @@
-import { useMemo } from 'preact/hooks'
+import { useMemo, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { DayInfo } from '../types'
 import { LAYOUT } from '../constants'
 
@@ -12,6 +12,35 @@ function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
   return result
+}
+
+type AnnotationTextProps = {
+  text: string
+  emoji: string
+  fontSize: number
+  className: string
+}
+
+function AnnotationText({ text, emoji, fontSize, className }: AnnotationTextProps) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [useEmoji, setUseEmoji] = useState(false)
+
+  useLayoutEffect(() => {
+    if (ref.current) {
+      const overflows = ref.current.scrollWidth > ref.current.clientWidth
+      setUseEmoji(overflows)
+    }
+  }, [text, fontSize])
+
+  return (
+    <span
+      ref={ref}
+      class={className}
+      style={{ fontSize: `${fontSize}px`, overflow: 'hidden', maxWidth: '100%' }}
+    >
+      {useEmoji ? emoji : text}
+    </span>
+  )
 }
 
 function calculateGrid(totalDays: number, width: number, height: number): { cols: number; rows: number } {
@@ -42,20 +71,6 @@ function calculateGrid(totalDays: number, width: number, height: number): { cols
   return { cols: bestCols, rows: bestRows }
 }
 
-function getAnnotationDisplay(
-  text: string,
-  cellSize: number,
-  fontSize: number,
-  annotationEmojis: Record<string, string>
-): string {
-  const longestWord = text.split(' ').reduce((a, b) => a.length > b.length ? a : b, '')
-  const estimatedWidth = longestWord.length * fontSize * 0.55
-  const availableWidth = cellSize * 0.85
-  if (estimatedWidth <= availableWidth) {
-    return text
-  }
-  return annotationEmojis[text] || text
-}
 
 type FillScreenViewProps = {
   days: DayInfo[]
@@ -122,11 +137,21 @@ export function FillScreenView({
             cellSize >= 50 ? (
               <>
                 <span class="date-label" style={{ fontSize: `${fontSize}px` }}>{formatDate(addDays(startDate, day.index))}</span>
-                <span class="annotation-text visible" style={{ fontSize: `${fontSize}px` }}>{getAnnotationDisplay(day.annotation, cellSize, fontSize, annotationEmojis)}</span>
+                <AnnotationText
+                  text={day.annotation}
+                  emoji={annotationEmojis[day.annotation] || day.annotation}
+                  fontSize={fontSize}
+                  className="annotation-text visible"
+                />
               </>
             ) : (
               <span class="annotation-container" style={{ fontSize: `${fontSize}px` }}>
-                <span class={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}>{getAnnotationDisplay(day.annotation, cellSize, fontSize, annotationEmojis)}</span>
+                <AnnotationText
+                  text={day.annotation}
+                  emoji={annotationEmojis[day.annotation] || day.annotation}
+                  fontSize={fontSize}
+                  className={`annotation-text ${showAnnotationDate ? 'hidden' : 'visible'}`}
+                />
                 <span class={`annotation-date ${showAnnotationDate ? 'visible' : 'hidden'}`}>{formatDate(addDays(startDate, day.index))}</span>
               </span>
             )
