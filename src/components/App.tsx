@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback, useRef } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import { FillScreenView } from './FillScreenView'
 import { WeeklyView } from './WeeklyView'
-import { InfoBar, VersionPopover, useVersionTap } from './InfoBar'
+import { InfoBar } from './InfoBar'
 import { Tooltip } from './Tooltip'
 import { useViewMode } from '../hooks/useViewMode'
 import { useContentSize } from '../hooks/useContentSize'
@@ -43,9 +43,7 @@ export function App() {
   const contentSize = useContentSize(contentRef)
   const [showAnnotationDate, setShowAnnotationDate] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState>(null)
-  const [showVersion, setShowVersion] = useState(false)
   const [viewMode, setViewMode] = useViewMode()
-  const handleVersionTap = useVersionTap(() => setShowVersion(true))
 
   useEffect(() => {
     const updateSize = () => setWindowSize(getViewportSize())
@@ -139,16 +137,6 @@ export function App() {
     })
   }, [totalDays, daysPassed, milestoneLookup])
 
-  const daysRemaining = totalDays - daysPassed
-  const weeksRemaining = Math.floor(daysRemaining / 7)
-  const extraDays = daysRemaining % 7
-  const timeRemaining = weeksRemaining > 0
-    ? `${weeksRemaining} week${weeksRemaining !== 1 ? 's' : ''}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? 's' : ''}` : ''} to go`
-    : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`
-  const currentWeek = Math.floor((daysPassed - 1) / 7) + 1
-  const currentDayInWeek = ((daysPassed - 1) % 7) + 1
-  const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1)
-
   const isLandscape = windowSize.width > windowSize.height
   const toggleViewMode = useCallback(() => {
     haptic()
@@ -181,18 +169,10 @@ export function App() {
       </div>
       <InfoBar
         viewMode={viewMode}
-        currentWeek={currentWeek}
-        currentDayInWeek={currentDayInWeek}
-        progressPercent={progressPercent}
-        timeRemaining={timeRemaining}
-        weeksRemaining={weeksRemaining}
-        daysRemaining={extraDays}
+        totalDays={totalDays}
+        daysPassed={daysPassed}
         onToggleView={toggleViewMode}
-        onVersionTap={handleVersionTap}
       />
-      {showVersion && (
-        <VersionPopover onClose={() => setShowVersion(false)} />
-      )}
       {tooltip && (
         <Tooltip
           day={tooltip.day}

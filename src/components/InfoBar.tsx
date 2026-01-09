@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'preact/hooks'
+import { useEffect, useRef, useCallback, useState } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import type { ViewMode } from '../hooks/useViewMode'
 
@@ -34,27 +34,33 @@ export function useVersionTap(onShowVersion: () => void) {
 
 type InfoBarProps = {
   viewMode: ViewMode
-  currentWeek: number
-  currentDayInWeek: number
-  progressPercent: string
-  timeRemaining: string
-  weeksRemaining: number
-  daysRemaining: number
+  totalDays: number
+  daysPassed: number
   onToggleView: () => void
-  onVersionTap: () => void
 }
 
 export function InfoBar({
   viewMode,
-  currentWeek,
-  currentDayInWeek,
-  progressPercent,
-  timeRemaining,
-  weeksRemaining,
-  daysRemaining,
+  totalDays,
+  daysPassed,
   onToggleView,
-  onVersionTap,
 }: InfoBarProps) {
+  const [showVersion, setShowVersion] = useState(false)
+  const handleVersionTap = useVersionTap(() => setShowVersion(true))
+
+  const daysRemaining = totalDays - daysPassed
+  const weeksRemaining = Math.floor(daysRemaining / 7)
+  const extraDays = daysRemaining % 7
+  const timeRemaining = weeksRemaining > 0
+    ? `Due in ${weeksRemaining} week${weeksRemaining !== 1 ? 's' : ''}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? 's' : ''}` : ''}`
+    : `Due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`
+  const timeRemainingCompact = weeksRemaining > 0
+    ? `Due in ${weeksRemaining}w${extraDays > 0 ? ` ${extraDays}d` : ''}`
+    : `Due in ${daysRemaining}d`
+  const currentWeek = Math.floor((daysPassed - 1) / 7) + 1
+  const currentDayInWeek = ((daysPassed - 1) % 7) + 1
+  const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1)
+
   return (
     <div class="info">
       <button class="view-toggle" onClick={onToggleView} aria-label="Toggle view">
@@ -82,11 +88,14 @@ export function InfoBar({
         <span class="info-full">Week {currentWeek}, Day {currentDayInWeek}</span>
         <span class="info-compact">{currentWeek}w {currentDayInWeek}d</span>
       </span>
-      <span class="info-text" onClick={onVersionTap}>{progressPercent}%</span>
+      <span class="info-text" onClick={handleVersionTap}>{progressPercent}%</span>
       <span class="info-text">
         <span class="info-full">{timeRemaining}</span>
-        <span class="info-compact">Due in {weeksRemaining}w {daysRemaining}d</span>
+        <span class="info-compact">{timeRemainingCompact}</span>
       </span>
+      {showVersion && (
+        <VersionPopover onClose={() => setShowVersion(false)} />
+      )}
     </div>
   )
 }
