@@ -80,12 +80,12 @@ export function InfoBar({
       </button>
       <span class="info-text">
         <span class="info-full">Week {currentWeek}, Day {currentDayInWeek}</span>
-        <span class="info-compact">{currentWeek}wk+{currentDayInWeek}d</span>
+        <span class="info-compact">{currentWeek}w {currentDayInWeek}d</span>
       </span>
       <span class="info-text" onClick={onVersionTap}>{progressPercent}%</span>
       <span class="info-text">
         <span class="info-full">{timeRemaining}</span>
-        <span class="info-compact">Due in {weeksRemaining}w{daysRemaining}d</span>
+        <span class="info-compact">Due in {weeksRemaining}w {daysRemaining}d</span>
       </span>
     </div>
   )
