@@ -1,6 +1,7 @@
 import { useMemo } from 'preact/hooks'
 import type { DayInfo } from '../types'
 import { LAYOUT } from '../constants'
+import { highlightedDays } from './App'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -163,11 +164,12 @@ export function WeeklyView({
                   return day ? (
                     <div
                       key={`${weekIndex}-${dayOfWeek}`}
-                      class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''}`}
+                      class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''} ${highlightedDays.value.indices.has(day.index) ? 'highlighted' : ''}`}
                       style={{
                         gridColumn: weekIndex + 1,
                         gridRow: dayOfWeek + 1,
                         ...(day.color ? { background: `var(--color-${day.color})` } : {}),
+                        ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } as React.CSSProperties : {}),
                       }}
                       onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
                     />
@@ -230,8 +232,11 @@ export function WeeklyView({
                 day ? (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''}`}
-                    style={day.color ? { background: `var(--color-${day.color})` } : undefined}
+                    class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''} ${highlightedDays.value.indices.has(day.index) ? 'highlighted' : ''}`}
+                    style={{
+                      ...(day.color ? { background: `var(--color-${day.color})` } : {}),
+                      ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } as React.CSSProperties : {}),
+                    }}
                     onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
                   />
                 ) : (

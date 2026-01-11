@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'preact/hooks'
+import { signal } from '@preact/signals'
 import { haptic } from 'ios-haptics'
 import { FillScreenView } from './FillScreenView'
 import { WeeklyView } from './WeeklyView'
@@ -11,6 +12,9 @@ import type { DayInfo } from '../types'
 import '../styles/app.css'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// Signal for highlighted day indices when a range milestone is selected
+export const highlightedDays = signal<{ indices: Set<number>; color?: string }>({ indices: new Set() })
 
 type TooltipState = {
   day: DayInfo
@@ -58,7 +62,10 @@ export function App() {
   // Dismiss tooltip on tap elsewhere
   useEffect(() => {
     if (!tooltip) return
-    const dismiss = () => setTooltip(null)
+    const dismiss = () => {
+      setTooltip(null)
+      highlightedDays.value = { indices: new Set() }
+    }
     document.addEventListener('pointerdown', dismiss)
     return () => document.removeEventListener('pointerdown', dismiss)
   }, [tooltip])
@@ -66,23 +73,51 @@ export function App() {
   // Auto-dismiss tooltip after 5 seconds
   useEffect(() => {
     if (!tooltip) return
-    const timer = setTimeout(() => setTooltip(null), 5000)
+    const timer = setTimeout(() => {
+      setTooltip(null)
+      highlightedDays.value = { indices: new Set() }
+    }, 5000)
     return () => clearTimeout(timer)
   }, [tooltip])
+
+  // Build milestone lookup by day index (needs to be before handleDayClick)
+  const milestoneLookup = useMemo(() => {
+    const lookup: Record<number, { label: string; color?: string; startIndex: number; endIndex: number }> = {}
+    for (const m of CONFIG.milestones) {
+      const startIndex = getDaysBetween(CONFIG.startDate, m.date)
+      const endIndex = m.endDate ? getDaysBetween(CONFIG.startDate, m.endDate) : startIndex
+      lookup[startIndex] = { label: m.label, color: m.color, startIndex, endIndex }
+    }
+    return lookup
+  }, [])
 
   const handleDayClick = useCallback((e: MouseEvent, day: DayInfo) => {
     e.stopPropagation()
     // If tooltip is open, just close it
     if (tooltip) {
       setTooltip(null)
+      highlightedDays.value = { indices: new Set() }
       return
     }
     haptic()
+
+    // Check if this day has a milestone with a range
+    const milestone = milestoneLookup[day.index]
+    if (milestone && milestone.endIndex > milestone.startIndex) {
+      const indices = new Set<number>()
+      for (let i = milestone.startIndex; i <= milestone.endIndex; i++) {
+        indices.add(i)
+      }
+      highlightedDays.value = { indices, color: milestone.color }
+    } else {
+      highlightedDays.value = { indices: new Set() }
+    }
+
     setTooltip({
       day,
       position: { x: e.clientX, y: e.clientY }
     })
-  }, [tooltip])
+  }, [tooltip, milestoneLookup])
 
   // Cycle annotation display on mobile
   useEffect(() => {
@@ -97,16 +132,6 @@ export function App() {
 
   const totalDays = getDaysBetween(CONFIG.startDate, CONFIG.dueDate) + 1
   const daysPassed = Math.max(0, Math.min(totalDays, getDaysBetween(CONFIG.startDate, today) + 1))
-
-  // Build milestone lookup by day index
-  const milestoneLookup = useMemo(() => {
-    const lookup: Record<number, { label: string; color?: string }> = {}
-    for (const m of CONFIG.milestones) {
-      const dayIndex = getDaysBetween(CONFIG.startDate, m.date)
-      lookup[dayIndex] = { label: m.label, color: m.color }
-    }
-    return lookup
-  }, [])
 
   const days = useMemo(() => {
     return Array.from({ length: totalDays }, (_, i) => {

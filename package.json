@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@preact/signals": "^2.5.1",
     "ios-haptics": "^0.1.4",
     "preact": "^10.27.2"
   },

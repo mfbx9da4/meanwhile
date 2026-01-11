@@ -78,6 +78,9 @@ body {
   --shadow-medium: rgba(0, 0, 0, 0.18);
   --shadow-strong: rgba(0, 0, 0, 0.2);
   --shadow-backdrop: rgba(0, 0, 0, 0.4);
+
+  /* Highlight default (for uncolored milestones) */
+  --color-highlight-default: #3a3a3c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -139,6 +142,9 @@ body {
     --shadow-medium: rgba(0, 0, 0, 0.5);
     --shadow-strong: rgba(0, 0, 0, 0.6);
     --shadow-backdrop: rgba(0, 0, 0, 0.7);
+
+    /* Highlight default (for uncolored milestones) */
+    --color-highlight-default: #ffffff;
   }
 
   body {
@@ -366,6 +372,12 @@ body {
 .day:active,
 .day.selected {
   opacity: 0.6;
+}
+
+.day.highlighted {
+  box-shadow: 0 0 0 2px var(--highlight-color, var(--color-highlight-default)), 0 0 8px var(--highlight-color, var(--color-highlight-default));
+  background: var(--highlight-color, var(--color-highlight-default)) !important;
+  z-index: 1;
 }
 
 /* Tooltip */
@@ -796,4 +808,10 @@ body {
 .weekly-cell.pressing {
   transform: scale(0.9);
   animation: press-hint 0.4s ease-out forwards;
+}
+
+.weekly-cell.highlighted {
+  box-shadow: 0 0 0 2px var(--highlight-color, var(--color-highlight-default)), 0 0 8px var(--highlight-color, var(--color-highlight-default));
+  background: var(--highlight-color, var(--color-highlight-default)) !important;
+  z-index: 1;
 }

@@ -1,6 +1,7 @@
 import { useMemo, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { DayInfo } from '../types'
 import { LAYOUT } from '../constants'
+import { highlightedDays } from './App'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -129,8 +130,11 @@ export function FillScreenView({
       {days.map((day) => (
         <div
           key={day.index}
-          class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''} ${selectedDayIndex === day.index ? 'selected' : ''}`}
-          style={day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : undefined}
+          class={`day ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${day.annotation ? 'has-annotation' : ''} ${selectedDayIndex === day.index ? 'selected' : ''} ${highlightedDays.value.indices.has(day.index) ? 'highlighted' : ''}`}
+          style={{
+            ...(day.color ? { background: `var(--color-${day.color})`, color: `var(--color-${day.color}-text)` } : {}),
+            ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } as React.CSSProperties : {}),
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
         >
