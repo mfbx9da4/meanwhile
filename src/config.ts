@@ -19,6 +19,7 @@ export const CONFIG = {
     { date: new Date(2026, 2, 29), label: "Vishal's Baby Due", emoji: '🐣' },
     { date: new Date(2026, 3, 12), label: 'Engagement Party', emoji: '🎉', color: 'orange' },
     { date: new Date(2026, 3, 26), label: "Seb's Baby Due", emoji: '🐣' },
+    { date: new Date(2026, 4, 8), label: "Daniel's Stag", emoji: '🎩', color: 'gold', description: '8 - 11 May' },
     { date: new Date(2026, 4, 23), label: 'May Half Term', emoji: '🏝️', description: 'School resumes 1 June' },
     { date: new Date(2026, 4, 28), label: 'Third Trimester', emoji: '🤰', color: 'blue', description: 'Start of third trimester' },
     { date: new Date(2026, 5, 7), label: 'Dan & Bex Wedding', emoji: '💒', color: 'pink' },
