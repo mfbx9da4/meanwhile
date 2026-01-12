@@ -236,6 +236,10 @@ body {
   animation: pulse-bg-even 4s ease-in-out infinite;
 }
 
+.day.today.uncolored-milestone {
+  animation: pulse-bg-milestone 4s ease-in-out infinite;
+}
+
 @keyframes pulse-bg-odd {
   0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); color: var(--color-text-on-color); }
   50% { background: var(--color-future-odd); border: 1px solid var(--color-future-odd-border); color: var(--color-text-primary); }
@@ -813,6 +817,15 @@ body {
 
 .weekly-cell.today.even-week {
   animation: pulse-bg-even 4s ease-in-out infinite;
+}
+
+.weekly-cell.today.uncolored-milestone {
+  animation: pulse-bg-milestone 4s ease-in-out infinite;
+}
+
+@keyframes pulse-bg-milestone {
+  0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); }
+  50% { background: var(--color-milestone-future); border: 1px solid var(--color-milestone-future-border); }
 }
 
 .weekly-cell.pressing {
