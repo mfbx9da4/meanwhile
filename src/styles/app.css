@@ -824,7 +824,7 @@ body {
 }
 
 @keyframes pulse-bg-milestone {
-  0%, 100% { background: var(--color-passed-odd); border: 1px solid var(--color-passed-odd); }
+  0%, 100% { background: var(--color-milestone-passed-odd); border: 1px solid var(--color-milestone-passed-odd); }
   50% { background: var(--color-milestone-future); border: 1px solid var(--color-milestone-future-border); }
 }
 
