@@ -689,6 +689,7 @@ export function TimelineView({
             // Lower rows get higher z-index so their content appears above stems from higher rows
             const zIndex = maxRow - m.row + 1
 
+            const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation) ? { viewTransitionName: `day-${m.index}` } : {}
             return (
               <div
                 key={m.index}
@@ -696,13 +697,12 @@ export function TimelineView({
                 style={{
                   left: `${m.position}%`,
                   zIndex,
-                  ...(VIEW_TRANSITION_LABELS.has(m.annotation) ? { viewTransitionName: `day-${m.index}` } : {}),
                   ...(m.color ? { '--milestone-color': `var(--color-${m.color})` } : {}),
                   ...(highlightedDays.value.indices.has(m.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } : {}),
                 }}
                 onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
               >
-                <div class="timeline-milestone-content">
+                <div class="timeline-milestone-content" style={viewTransitionStyle}>
                   <span class="timeline-milestone-emoji">{annotationEmojis[m.annotation] || ''}</span>
                   <span class="timeline-milestone-label">{m.annotation}</span>
                 </div>
