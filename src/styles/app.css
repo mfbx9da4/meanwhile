@@ -1220,7 +1220,8 @@ body {
 @media (max-width: 500px) {
   .timeline-view.portrait {
     padding: 12px;
-    padding-top: 32px;
+    padding-top: 22px;
+    padding-bottom: 16px;
     padding-left: 6px; /* Less padding on left to balance gantt labels */
   }
 
