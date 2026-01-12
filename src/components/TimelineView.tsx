@@ -642,25 +642,25 @@ export function TimelineView({
               // Stem extends from milestone container through months column to the timeline line
               // Base: 16px stem + 32px months width + collision offset
               const stemWidth = 16 + PORTRAIT_MONTHS_WIDTH + contentOffset
+              const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation) ? { viewTransitionName: `day-${m.index}` } : {}
               return (
                 <div
                   key={m.index}
                   class={`timeline-milestone-portrait ${m.color ? `colored color-${m.color}` : ''} ${m.isToday ? 'today' : ''} ${selectedDayIndex === m.index ? 'selected' : ''} ${m.expanded ? 'expanded' : 'collapsed'}`}
                   style={{
                     top: `${m.position}%`,
-                    ...(VIEW_TRANSITION_LABELS.has(m.annotation) ? { viewTransitionName: `day-${m.index}` } : {}),
                     ...(m.color ? { '--milestone-color': `var(--color-${m.color})` } : {}),
                   }}
                   onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
                 >
                   <div class="timeline-milestone-stem-portrait" style={{ width: `${stemWidth}px` }} />
                   {m.expanded ? (
-                    <div class="timeline-milestone-content-portrait">
+                    <div class="timeline-milestone-content-portrait" style={viewTransitionStyle}>
                       <span class="timeline-milestone-emoji">{annotationEmojis[m.annotation] || ''}</span>
                       <span class="timeline-milestone-label">{m.annotation}</span>
                     </div>
                   ) : (
-                    <div class="timeline-milestone-emoji-only">
+                    <div class="timeline-milestone-emoji-only" style={viewTransitionStyle}>
                       <span class="timeline-milestone-emoji">{annotationEmojis[m.annotation] || ''}</span>
                     </div>
                   )}
