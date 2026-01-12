@@ -5,6 +5,9 @@ import { highlightedDays } from './App'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+// Milestones that get view transitions
+const VIEW_TRANSITION_LABELS = new Set(['Start', 'Announce!', 'Third Trimester', 'Due'])
+
 const DAY_LABELS = ['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed']
 const DAY_LABELS_SHORT = ['T', 'F', 'S', 'S', 'M', 'T', 'W']
 
@@ -166,6 +169,7 @@ export function WeeklyView({
                       key={`${weekIndex}-${dayOfWeek}`}
                       class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''} ${highlightedDays.value.indices.has(day.index) ? 'highlighted' : ''}`}
                       style={{
+                        ...(VIEW_TRANSITION_LABELS.has(day.annotation) ? { viewTransitionName: `day-${day.index}` } : {}),
                         gridColumn: weekIndex + 1,
                         gridRow: dayOfWeek + 1,
                         ...(day.color ? { background: `var(--color-${day.color})` } : {}),
@@ -234,6 +238,7 @@ export function WeeklyView({
                     key={`${weekIndex}-${dayOfWeek}`}
                     class={`weekly-cell ${day.passed ? 'passed' : 'future'} ${day.color ? 'milestone' : ''} ${day.isUncoloredMilestone ? 'uncolored-milestone' : ''} ${day.isOddWeek ? 'odd-week' : 'even-week'} ${day.isToday ? 'today' : ''} ${selectedDayIndex === day.index ? 'selected' : ''} ${highlightedDays.value.indices.has(day.index) ? 'highlighted' : ''}`}
                     style={{
+                      ...(VIEW_TRANSITION_LABELS.has(day.annotation) ? { viewTransitionName: `day-${day.index}` } : {}),
                       ...(day.color ? { background: `var(--color-${day.color})` } : {}),
                       ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } as React.CSSProperties : {}),
                     }}

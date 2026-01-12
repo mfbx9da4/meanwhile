@@ -1,6 +1,26 @@
-import { useEffect, useRef, useCallback, useState } from 'preact/hooks'
+import { useEffect, useRef, useCallback, useState, useMemo } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
 import type { ViewMode } from '../hooks/useViewMode'
+
+// Grid positions for 3x3 grid
+const GRID_POSITIONS = [
+  { x: 1, y: 1 }, { x: 7, y: 1 }, { x: 13, y: 1 },
+  { x: 1, y: 7 }, { x: 7, y: 7 }, { x: 13, y: 7 },
+  { x: 1, y: 13 }, { x: 7, y: 13 }, { x: 13, y: 13 },
+]
+
+// Seeded shuffle for consistent results
+function seededShuffle<T>(array: T[], seed: number): T[] {
+  const result = [...array]
+  let m = result.length
+  let s = seed
+  while (m) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff
+    const i = s % m--
+    ;[result[m], result[i]] = [result[i], result[m]]
+  }
+  return result
+}
 
 declare const __GIT_COMMIT__: string
 declare const __GIT_DATE__: string
@@ -32,6 +52,38 @@ export function useVersionTap(onShowVersion: () => void) {
   return handleVersionTap
 }
 
+function ShuffleGridIcon({ shuffleKey }: { shuffleKey: number }) {
+  const positions = useMemo(() => {
+    if (shuffleKey === 0) return GRID_POSITIONS
+    return seededShuffle(GRID_POSITIONS, shuffleKey)
+  }, [shuffleKey])
+
+  return (
+    <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+      {GRID_POSITIONS.map((originalPos, i) => {
+        const targetPos = positions[i]
+        const dx = targetPos.x - originalPos.x
+        const dy = targetPos.y - originalPos.y
+        return (
+          <rect
+            key={i}
+            x={originalPos.x}
+            y={originalPos.y}
+            width="4"
+            height="4"
+            rx="1"
+            fill="currentColor"
+            style={{
+              transform: `translate(${dx}px, ${dy}px)`,
+              transition: 'transform 0.3s ease',
+            }}
+          />
+        )
+      })}
+    </svg>
+  )
+}
+
 type InfoBarProps = {
   viewMode: ViewMode
   totalDays: number
@@ -46,7 +98,17 @@ export function InfoBar({
   onToggleView,
 }: InfoBarProps) {
   const [showVersion, setShowVersion] = useState(false)
+  const [shuffleKey, setShuffleKey] = useState(0)
   const handleVersionTap = useVersionTap(() => setShowVersion(true))
+
+  const handleToggle = useCallback(() => {
+    setShuffleKey(k => k + 1)
+    if (document.startViewTransition) {
+      document.startViewTransition(() => onToggleView())
+    } else {
+      onToggleView()
+    }
+  }, [onToggleView])
 
   const daysRemaining = totalDays - daysPassed
   const weeksRemaining = Math.floor(daysRemaining / 7)
@@ -64,26 +126,8 @@ export function InfoBar({
 
   return (
     <div class="info">
-      <button class="view-toggle" onClick={onToggleView} aria-label="Toggle view">
-        {viewMode === 'fill' ? (
-          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-            <rect x="1" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.3"/>
-            <rect x="7" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.5"/>
-            <rect x="13" y="1" width="4" height="16" rx="1" fill="currentColor" opacity="0.7"/>
-          </svg>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-            <rect x="1" y="1" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="7" y="1" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="13" y="1" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="1" y="7" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="7" y="7" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="13" y="7" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="1" y="13" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="7" y="13" width="4" height="4" rx="1" fill="currentColor"/>
-            <rect x="13" y="13" width="4" height="4" rx="1" fill="currentColor"/>
-          </svg>
-        )}
+      <button class="view-toggle" onClick={handleToggle} aria-label="Toggle view">
+        <ShuffleGridIcon shuffleKey={shuffleKey} />
       </button>
       <span class="info-text">
         <span class="info-full">Week {currentWeek}{currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ''}</span>

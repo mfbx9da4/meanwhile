@@ -815,3 +815,9 @@ body {
   background: var(--highlight-color, var(--color-highlight-default)) !important;
   z-index: 1;
 }
+
+/* View Transitions for trimester milestones */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+}
