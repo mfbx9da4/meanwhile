@@ -676,10 +676,10 @@ export function TimelineView({
   // Landscape layout - horizontal timeline
   return (
     <div class="timeline-view landscape">
-      <div class="timeline-content">
+      <div class="timeline-content-landscape">
         {/* Milestones container */}
         <div
-          class="timeline-milestones"
+          class="timeline-milestones-landscape"
           style={{ height: `${milestonesHeight}px` }}
         >
           {milestones.map(m => {
@@ -693,7 +693,7 @@ export function TimelineView({
             return (
               <div
                 key={m.index}
-                class={`timeline-milestone ${m.color ? `colored color-${m.color}` : ''} ${m.isToday ? 'today' : ''} ${selectedDayIndex === m.index ? 'selected' : ''} ${highlightedDays.value.indices.has(m.index) ? 'highlighted' : ''}`}
+                class={`timeline-milestone-landscape ${m.color ? `colored color-${m.color}` : ''} ${m.isToday ? 'today' : ''} ${selectedDayIndex === m.index ? 'selected' : ''} ${highlightedDays.value.indices.has(m.index) ? 'highlighted' : ''}`}
                 style={{
                   left: `${m.position}%`,
                   zIndex,
@@ -702,20 +702,20 @@ export function TimelineView({
                 }}
                 onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
               >
-                <div class="timeline-milestone-content" style={viewTransitionStyle}>
+                <div class="timeline-milestone-content-landscape" style={viewTransitionStyle}>
                   <span class="timeline-milestone-emoji">{annotationEmojis[m.annotation] || ''}</span>
                   <span class="timeline-milestone-label">{m.annotation}</span>
                 </div>
-                <div class="timeline-milestone-stem" style={{ height: `${stemHeight}px` }} />
+                <div class="timeline-milestone-stem-landscape" style={{ height: `${stemHeight}px` }} />
               </div>
             )
           })}
         </div>
 
         {/* Line area with months above */}
-        <div class="timeline-line-area">
+        <div class="timeline-line-area-landscape">
           {/* Month markers above the line */}
-          <div class="timeline-months">
+          <div class="timeline-months-landscape">
             {monthMarkers.map((m, i) => (
               <div
                 key={i}
@@ -730,19 +730,19 @@ export function TimelineView({
           {/* The timeline line */}
           <div
             ref={lineRef}
-            class="timeline-line"
+            class="timeline-line-landscape"
             onMouseMove={handleLineMouseMove as unknown as (e: Event) => void}
             onMouseLeave={handleLineMouseLeave}
           >
             {/* Progress fill */}
             <div
-              class="timeline-progress"
+              class="timeline-progress-landscape"
               style={{ width: `${todayPosition}%` }}
             />
             {/* Hover dot */}
             {hoverPosition !== null && hoverDayIndex !== null && hoverDayIndex !== todayIndex && (
               <div
-                class={`timeline-hover-dot ${hoverDayIndex < (todayIndex >= 0 ? todayIndex : totalDays) ? 'passed' : 'future'}`}
+                class={`timeline-hover-dot-landscape ${hoverDayIndex < (todayIndex >= 0 ? todayIndex : totalDays) ? 'passed' : 'future'}`}
                 style={{ left: `${hoverPosition}%` }}
                 onClick={(e) => {
                   const day = days[hoverDayIndex]
@@ -753,7 +753,7 @@ export function TimelineView({
             {/* Today marker */}
             {todayIndex >= 0 && (
               <div
-                class="timeline-today"
+                class="timeline-today-landscape"
                 style={{ left: `${todayPosition}%`, viewTransitionName: 'today-marker' }}
                 onClick={(e) => {
                   const today = days.find(d => d.isToday)
@@ -767,7 +767,7 @@ export function TimelineView({
         </div>
 
         {/* Week markers below the line */}
-        <div class="timeline-weeks">
+        <div class="timeline-weeks-landscape">
           {weekMarkers.map((w) => (
             <div
               key={w.week}
@@ -782,17 +782,17 @@ export function TimelineView({
         {/* Gantt section for range milestones */}
         {ganttBars.length > 0 && (
           <div
-            class="timeline-gantt-section"
+            class="timeline-gantt-section-landscape"
             style={{ height: `${ganttLabelRowCount * ROW_HEIGHT + ganttBarRowCount * GANTT_ROW_HEIGHT + 10}px` }}
           >
             {/* Bars at top */}
-            <div class="timeline-gantt-bars" style={{ height: `${ganttBarRowCount * GANTT_ROW_HEIGHT}px` }}>
+            <div class="timeline-gantt-bars-landscape" style={{ height: `${ganttBarRowCount * GANTT_ROW_HEIGHT}px` }}>
               {ganttBars.map((bar) => {
                 const isHighlighted = highlightedDays.value.indices.has(bar.startIndex)
                 return (
                   <div
                     key={`bar-${bar.label}`}
-                    class={`timeline-gantt-bar ${bar.color ? `colored color-${bar.color}` : ''} ${isHighlighted ? 'highlighted' : ''}`}
+                    class={`timeline-gantt-bar-landscape ${bar.color ? `colored color-${bar.color}` : ''} ${isHighlighted ? 'highlighted' : ''}`}
                     style={{
                       left: `${bar.startPosition}%`,
                       width: `${bar.width}%`,
@@ -810,7 +810,7 @@ export function TimelineView({
               })}
             </div>
             {/* Labels below bars with stems going up from center of range */}
-            <div class="timeline-gantt-labels" style={{ height: `${ganttLabelRowCount * ROW_HEIGHT}px` }}>
+            <div class="timeline-gantt-labels-landscape" style={{ height: `${ganttLabelRowCount * ROW_HEIGHT}px` }}>
               {ganttBars.map((bar) => {
                 const isHighlighted = highlightedDays.value.indices.has(bar.startIndex)
                 const stemHeight = 20 + bar.labelRow * ROW_HEIGHT
@@ -818,7 +818,7 @@ export function TimelineView({
                 return (
                   <div
                     key={`label-${bar.label}`}
-                    class={`timeline-gantt-item ${bar.color ? `colored color-${bar.color}` : ''} ${isHighlighted ? 'highlighted' : ''}`}
+                    class={`timeline-gantt-item-landscape ${bar.color ? `colored color-${bar.color}` : ''} ${isHighlighted ? 'highlighted' : ''}`}
                     style={{
                       left: `${centerPosition}%`,
                       top: 0,
@@ -830,8 +830,8 @@ export function TimelineView({
                       if (day) onDayClick(e as unknown as MouseEvent, day)
                     }}
                   >
-                    <div class="timeline-gantt-stem" style={{ height: `${stemHeight}px` }} />
-                    <div class="timeline-gantt-label-content">
+                    <div class="timeline-gantt-stem-landscape" style={{ height: `${stemHeight}px` }} />
+                    <div class="timeline-gantt-label-content-landscape">
                       <span class="timeline-gantt-label-emoji">{bar.emoji}</span>
                       <span class="timeline-gantt-label-text">{bar.label}</span>
                     </div>
