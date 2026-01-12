@@ -1203,6 +1203,7 @@ body {
 .timeline-view.portrait {
   padding: 20px;
   padding-top: 40px;
+  padding-left: 10px; /* Less padding on left to balance gantt labels */
   overflow: hidden;
 }
 
@@ -1220,6 +1221,7 @@ body {
   .timeline-view.portrait {
     padding: 12px;
     padding-top: 32px;
+    padding-left: 6px; /* Less padding on left to balance gantt labels */
   }
 
   .timeline-milestone-content-portrait {
