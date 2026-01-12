@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'preact/hooks'
 import { haptic } from 'ios-haptics'
+import type { ViewMode } from '../hooks/useViewMode'
 
 // Grid positions for 3x3 grid
 const GRID_POSITIONS = [
@@ -84,12 +85,14 @@ function ShuffleGridIcon({ shuffleKey }: { shuffleKey: number }) {
 }
 
 type InfoBarProps = {
+  viewMode: ViewMode
   totalDays: number
   daysPassed: number
   onToggleView: () => void
 }
 
 export function InfoBar({
+  viewMode: _viewMode,
   totalDays,
   daysPassed,
   onToggleView,

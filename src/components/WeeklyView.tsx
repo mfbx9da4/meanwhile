@@ -1,4 +1,3 @@
-import type { JSX } from 'preact'
 import { useMemo } from 'preact/hooks'
 import type { DayInfo } from '../types'
 import { LAYOUT } from '../constants'
@@ -174,7 +173,7 @@ export function WeeklyView({
                         gridColumn: weekIndex + 1,
                         gridRow: dayOfWeek + 1,
                         ...(day.color ? { background: `var(--color-${day.color})` } : {}),
-                        ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } as JSX.CSSProperties : {}),
+                        ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } : {}),
                       }}
                       onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
                     />
@@ -241,7 +240,7 @@ export function WeeklyView({
                     style={{
                       ...(VIEW_TRANSITION_LABELS.has(day.annotation) ? { viewTransitionName: `day-${day.index}` } : day.isToday ? { viewTransitionName: 'today-marker' } : {}),
                       ...(day.color ? { background: `var(--color-${day.color})` } : {}),
-                      ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } as JSX.CSSProperties : {}),
+                      ...(highlightedDays.value.indices.has(day.index) && highlightedDays.value.color ? { '--highlight-color': `var(--color-${highlightedDays.value.color})` } : {}),
                     }}
                     onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
                   />
