@@ -1168,6 +1168,10 @@ body {
   color: var(--color-salmon-text);
 }
 
+.timeline-gantt-item-landscape.color-subtle .timeline-gantt-label-content-landscape {
+  color: var(--color-subtle-text);
+}
+
 .timeline-gantt-item-landscape.highlighted .timeline-gantt-label-content-landscape {
   box-shadow: 0 0 8px var(--highlight-color, var(--color-highlight-default));
 }
