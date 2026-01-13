@@ -14,7 +14,7 @@ function getStoredViewMode(): ViewMode {
   } catch {
     // localStorage not available
   }
-  return 'fill'
+  return 'weekly'
 }
 
 export function getNextViewMode(current: ViewMode, _width: number): ViewMode {
