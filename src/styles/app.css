@@ -331,6 +331,12 @@ body {
   color: var(--color-text-on-color);
 }
 
+.day.uncolored-milestone.future .annotation-text,
+.day.uncolored-milestone.future .annotation-date,
+.day.uncolored-milestone.future .date-label {
+  color: var(--color-subtle-text);
+}
+
 .day.today .date-label,
 .day.today .annotation-text,
 .day.today .annotation-date {
