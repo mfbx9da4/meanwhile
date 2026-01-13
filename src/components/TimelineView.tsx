@@ -147,75 +147,15 @@ function assignPortraitColumns(
   _containerHeight: number, // kept for API compatibility but not used
   screenWidth: number
 ): PortraitMilestoneWithLayout[] {
-  // Sort by position (top to bottom)
-  const sorted = [...milestones].sort((a, b) => a.position - b.position)
-
   // Collision detection parameters
-  const emojiOnlyWidth = 32 // pixels - actual rendered width of emoji element
-  const emojiGap = 8 // pixels - horizontal gap between emojis
-  const verticalGapPercent = 1.5 // percentage points - how close vertically before collision
+  const emojiSize = 24 // pixels - emoji element is 24x24
+  const halfHeightPct = 2 // approximate height in percentage points
+  const verticalGapPct = 0.5 // minimum vertical gap in percentage points
 
   // Calculate available width for milestone content
   const availableWidth = screenWidth <= 500
     ? Math.max(60, screenWidth * 0.45)
     : Math.max(80, screenWidth - 190)
-
-  // Track occupied ranges: vertical in %, horizontal in px
-  const occupiedRanges: Array<{ topPct: number; bottomPct: number; leftPx: number; rightPx: number }>[] = []
-
-  const result: PortraitMilestoneWithLayout[] = []
-
-  for (const milestone of sorted) {
-    // Vertical bounds in percentage (matches CSS top: X%)
-    const centerPct = milestone.position
-    const halfHeightPct = 2 // approximate height in percentage points
-    const topPct = centerPct - halfHeightPct
-    const bottomPct = centerPct + halfHeightPct
-
-    // Find leftmost position that doesn't conflict
-    let bestLeftPx = 0
-
-    // Get ranges that vertically overlap with this milestone
-    const conflictingRanges = occupiedRanges.flat().filter(range => {
-      const verticalOverlap = !(bottomPct + verticalGapPercent < range.topPct ||
-                                topPct - verticalGapPercent > range.bottomPct)
-      return verticalOverlap
-    })
-
-    // Candidate positions: 0, then after each conflicting range
-    const positionsToTry = [0, ...conflictingRanges.map(r => r.rightPx + emojiGap)]
-      .filter((v, i, a) => a.indexOf(v) === i) // unique
-      .sort((a, b) => a - b)
-
-    for (const tryLeft of positionsToTry) {
-      const tryRight = tryLeft + emojiOnlyWidth
-
-      // Skip if off-screen
-      if (tryRight > availableWidth) continue
-
-      // Check for horizontal collision with vertically-overlapping ranges
-      const hasConflict = conflictingRanges.some(range =>
-        !(tryRight < range.leftPx || tryLeft > range.rightPx)
-      )
-
-      if (!hasConflict) {
-        bestLeftPx = tryLeft
-        break
-      }
-    }
-
-    // Record occupancy
-    const bounds = { topPct, bottomPct, leftPx: bestLeftPx, rightPx: bestLeftPx + emojiOnlyWidth }
-    occupiedRanges.push([bounds])
-
-    result.push({
-      ...milestone,
-      column: 0, // legacy
-      leftPx: bestLeftPx,
-      height: PORTRAIT_EMOJI_HEIGHT,
-      expanded: false,
-    })
-  }
 
   // Helper to estimate label width (emoji + text + padding)
   const estimateLabelWidth = (label: string): number => {
@@ -223,82 +163,105 @@ function assignPortraitColumns(
     return Math.min(150, label.length * 7 + 34)
   }
 
-  // Helper to check if expanding a milestone causes conflicts
-  const canExpand = (index: number, expandedWidth: number): boolean => {
+  // Initialize all milestones at leftPx=0, closed
+  const result: PortraitMilestoneWithLayout[] = milestones.map(m => ({
+    ...m,
+    column: 0,
+    leftPx: 0,
+    height: PORTRAIT_EMOJI_HEIGHT,
+    expanded: false,
+  }))
+
+  // Check if two milestones overlap given their current positions
+  const overlaps = (a: PortraitMilestoneWithLayout, b: PortraitMilestoneWithLayout): boolean => {
+    // Vertical bounds
+    const aTop = a.position - halfHeightPct
+    const aBottom = a.position + halfHeightPct
+    const bTop = b.position - halfHeightPct
+    const bBottom = b.position + halfHeightPct
+
+    // Check vertical overlap
+    const verticalOverlap = !(aBottom + verticalGapPct <= bTop || aTop - verticalGapPct >= bBottom)
+    if (!verticalOverlap) return false
+
+    // Horizontal bounds (using emoji size for closed milestones)
+    const aLeft = a.leftPx
+    const aRight = a.leftPx + emojiSize
+    const bLeft = b.leftPx
+    const bRight = b.leftPx + emojiSize
+
+    // Check horizontal overlap
+    return !(aRight <= bLeft || aLeft >= bRight)
+  }
+
+  // Recursive repositioning until no overlaps
+  let hasOverlap = true
+  let iterations = 0
+  const maxIterations = 100
+
+  while (hasOverlap && iterations < maxIterations) {
+    hasOverlap = false
+    iterations++
+
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+        if (overlaps(result[i], result[j])) {
+          hasOverlap = true
+          // Move the one that's further right, or if equal, move the lower one
+          const toMove = result[j].leftPx >= result[i].leftPx ? j : i
+          result[toMove].leftPx += emojiSize
+        }
+      }
+    }
+  }
+
+  // Check if anything is to the right of a milestone at its vertical position
+  const hasAnythingToRight = (index: number, expandedWidth: number): boolean => {
     const m = result[index]
-
-    // Check if expanding would overflow the screen
-    if (m.leftPx + expandedWidth > availableWidth) {
-      return false
-    }
-
-    // On very narrow screens, only allow expansion at position 0
-    if (screenWidth <= 400 && m.leftPx > 0) {
-      return false
-    }
-
-    // Vertical bounds in percentage (same as first pass)
-    const centerPct = m.position
-    const halfHeightPct = 2
-    const myTopPct = centerPct - halfHeightPct
-    const myBottomPct = centerPct + halfHeightPct
-
-    // Horizontal extent if expanded
-    const myLeft = m.leftPx
+    const myTop = m.position - halfHeightPct
+    const myBottom = m.position + halfHeightPct
     const myRight = m.leftPx + expandedWidth
 
-    // Check against ALL other milestones for overlap
     for (let i = 0; i < result.length; i++) {
       if (i === index) continue
 
       const other = result[i]
-      const otherCenterPct = other.position
-      const otherTopPct = otherCenterPct - halfHeightPct
-      const otherBottomPct = otherCenterPct + halfHeightPct
+      const otherTop = other.position - halfHeightPct
+      const otherBottom = other.position + halfHeightPct
 
-      // Check vertical overlap (in percentage)
-      const verticalOverlap = !(myBottomPct + verticalGapPercent < otherTopPct ||
-                                myTopPct - verticalGapPercent > otherBottomPct)
+      // Check vertical overlap
+      const verticalOverlap = !(myBottom + verticalGapPct <= otherTop || myTop - verticalGapPct >= otherBottom)
+      if (!verticalOverlap) continue
 
-      if (verticalOverlap) {
-        // Calculate other milestone's horizontal extent
-        const otherWidth = other.expanded ? estimateLabelWidth(other.annotation) : emojiOnlyWidth
-        const otherLeft = other.leftPx
-        const otherRight = other.leftPx + otherWidth
-
-        // Check horizontal overlap
-        const horizontalOverlap = !(myRight + emojiGap < otherLeft || myLeft - emojiGap > otherRight)
-
-        if (horizontalOverlap) {
-          return false
-        }
+      // Check if other is to our right and would overlap with expanded width
+      if (other.leftPx >= m.leftPx && other.leftPx < myRight) {
+        return true
       }
     }
-    return true
+    return false
   }
 
-  // Second pass: try to expand colored milestones (non-subtle)
+  // Expand colored milestones (non-subtle first, then subtle)
   const coloredIndices = result
     .map((m, i) => ({ m, i }))
     .filter(({ m }) => m.color && m.color !== 'subtle')
     .map(({ i }) => i)
 
-  for (const idx of coloredIndices) {
-    const expandedWidth = estimateLabelWidth(result[idx].annotation)
-    if (canExpand(idx, expandedWidth)) {
-      result[idx].expanded = true
-    }
-  }
-
-  // Third pass: try to expand subtle milestones
   const subtleIndices = result
     .map((m, i) => ({ m, i }))
     .filter(({ m }) => m.color === 'subtle')
     .map(({ i }) => i)
 
-  for (const idx of subtleIndices) {
+  for (const idx of [...coloredIndices, ...subtleIndices]) {
     const expandedWidth = estimateLabelWidth(result[idx].annotation)
-    if (canExpand(idx, expandedWidth)) {
+
+    // Don't expand if it would go off screen
+    if (result[idx].leftPx + expandedWidth > availableWidth) {
+      continue
+    }
+
+    // Expand if nothing to the right
+    if (!hasAnythingToRight(idx, expandedWidth)) {
       result[idx].expanded = true
     }
   }
