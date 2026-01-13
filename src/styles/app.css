@@ -51,15 +51,16 @@ body {
   --color-gold: #d4a83c;
   --color-salmon: #d4908f;
   --color-subtle: #ffffff;
+  --color-subtle-border: #c7c7cc;
 
   /* Milestone text colors (light tinted shades for text on colored backgrounds) */
   --color-pink-text: #ffeef3;
   --color-purple-text: #f3e8f8;
-  --color-orange-text: #7a5200;
+  --color-orange-text: #3a2700;
   --color-teal-text: #e0f7f4;
   --color-blue-text: #e3f2fd;
   --color-red-text: #ffebee;
-  --color-gold-text: #4a3c00;
+  --color-gold-text: #2b2300;
   --color-salmon-text: #fff5f5;
   --color-subtle-text: #3a3a3c;
 
@@ -128,6 +129,7 @@ body {
     --color-gold: #fbbf24;
     --color-salmon: #fda4af;
     --color-subtle: #48484a;
+    --color-subtle-border: #636366;
 
     /* Milestone text - dark text on bright colors */
     --color-pink-text: #1c1c1e;

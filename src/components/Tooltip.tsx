@@ -23,6 +23,14 @@ function getDayColor(day: DayInfo): string {
   return getCssVar(day.isOddWeek ? '--color-text-tertiary' : '--color-text-secondary')
 }
 
+function getBorderColor(day: DayInfo): string {
+  // Subtle color needs a visible border since the color itself is white/transparent
+  if (day.color === 'subtle') {
+    return getCssVar('--color-subtle-border') || getCssVar('--color-border')
+  }
+  return getDayColor(day)
+}
+
 // Only subtle needs text override (uses subtle-text which adapts to color scheme)
 // Other colors (orange, gold, salmon) use their base colors which are readable in both modes
 const TEXT_COLOR_OVERRIDES = ['subtle']
@@ -59,6 +67,7 @@ export function Tooltip({
   const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
   const fullDate = `${dayOfWeek}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
   const color = getDayColor(day)
+  const borderColor = getBorderColor(day)
   const annotationColor = getAnnotationTextColor(day)
 
   const tooltipWidth = 180
@@ -86,7 +95,7 @@ export function Tooltip({
       style={{
         left: `${left}px`,
         top: `${top}px`,
-        borderColor: color,
+        borderColor: borderColor,
       }}
     >
       {emoji && <div class="tooltip-emoji">{emoji}</div>}
