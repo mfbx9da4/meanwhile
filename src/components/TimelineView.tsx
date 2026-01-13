@@ -139,134 +139,170 @@ type PortraitMilestoneWithLayout = DayInfo & {
   expanded: boolean // whether to show label or just emoji
 }
 
-// Smart column assignment for portrait milestones
-// Uses percentage-based vertical positioning to match CSS rendering
-// Horizontal positions in pixels for precise collision detection
+// Lane-based layout algorithm for portrait milestones
+// Uses interval graph coloring to assign lanes, then optimizes expansion
 function assignPortraitColumns(
   milestones: (DayInfo & { position: number })[],
-  _containerHeight: number, // kept for API compatibility but not used
   screenWidth: number
 ): PortraitMilestoneWithLayout[] {
-  // Collision detection parameters
-  const emojiSize = 24 // pixels - emoji element is 24x24
-  const halfHeightPct = 2 // approximate height in percentage points
-  const verticalGapPct = 0.5 // minimum vertical gap in percentage points
+  if (milestones.length === 0) return []
 
-  // Calculate available width for milestone content
-  const availableWidth = screenWidth <= 500
-    ? Math.max(60, screenWidth * 0.45)
-    : Math.max(80, screenWidth - 190)
+  // Layout constants
+  const COLLAPSED_WIDTH = 24
+  const BASE_STEM_WIDTH = 48 // 16px stem + 32px months column
+  const halfHeightPct = 2
+  const verticalGapPct = 0.5
 
-  // Helper to estimate label width (emoji + text + padding)
-  const estimateLabelWidth = (label: string): number => {
-    // ~7px per character + 18px emoji + 16px padding
-    return Math.min(150, label.length * 7 + 34)
-  }
+  // The milestone container starts at roughly 54% from left edge
+  // Content position = container.left + BASE_STEM_WIDTH + leftPx
+  // Available width for leftPx + contentWidth = screenEdge - container.left - BASE_STEM_WIDTH
+  const availableWidth = Math.floor(screenWidth * 0.46) - BASE_STEM_WIDTH
 
-  // Initialize all milestones at leftPx=0, closed
-  const result: PortraitMilestoneWithLayout[] = milestones.map(m => ({
-    ...m,
-    column: 0,
-    leftPx: 0,
-    height: PORTRAIT_EMOJI_HEIGHT,
-    expanded: false,
-  }))
+  // Estimate expanded label width: ~7px per char + emoji + padding
+  const estimateLabelWidth = (label: string): number => Math.min(140, label.length * 7 + 34)
 
-  // Check if two milestones overlap given their current positions
-  const overlaps = (a: PortraitMilestoneWithLayout, b: PortraitMilestoneWithLayout): boolean => {
-    // Vertical bounds
+  // Check if two items conflict vertically
+  const conflictsVertically = (a: { position: number }, b: { position: number }): boolean => {
     const aTop = a.position - halfHeightPct
     const aBottom = a.position + halfHeightPct
     const bTop = b.position - halfHeightPct
     const bBottom = b.position + halfHeightPct
-
-    // Check vertical overlap
-    const verticalOverlap = !(aBottom + verticalGapPct <= bTop || aTop - verticalGapPct >= bBottom)
-    if (!verticalOverlap) return false
-
-    // Horizontal bounds (using emoji size for closed milestones)
-    const aLeft = a.leftPx
-    const aRight = a.leftPx + emojiSize
-    const bLeft = b.leftPx
-    const bRight = b.leftPx + emojiSize
-
-    // Check horizontal overlap
-    return !(aRight <= bLeft || aLeft >= bRight)
+    return Math.max(aTop, bTop) < Math.min(aBottom, bBottom) + verticalGapPct
   }
 
-  // Recursive repositioning until no overlaps
-  let hasOverlap = true
+  // Sort by position (top to bottom)
+  const sorted = [...milestones].sort((a, b) => a.position - b.position)
+  const itemIds = new Map(sorted.map((m, i) => [m, i]))
+
+  // Assign lanes using greedy interval graph coloring
+  const lanes: typeof sorted[] = []
+  const laneAssignment = new Map<number, number>()
+
+  for (const item of sorted) {
+    const itemId = itemIds.get(item)!
+    let assignedLane = -1
+
+    for (let laneIdx = 0; laneIdx < lanes.length; laneIdx++) {
+      if (!lanes[laneIdx].some(other => conflictsVertically(item, other))) {
+        assignedLane = laneIdx
+        break
+      }
+    }
+
+    if (assignedLane === -1) {
+      assignedLane = lanes.length
+      lanes.push([])
+    }
+
+    lanes[assignedLane].push(item)
+    laneAssignment.set(itemId, assignedLane)
+  }
+
+  // Build conflict map
+  const conflicts = new Map<number, Set<number>>()
+  for (let i = 0; i < sorted.length; i++) {
+    conflicts.set(i, new Set())
+  }
+  for (let i = 0; i < sorted.length; i++) {
+    for (let j = i + 1; j < sorted.length; j++) {
+      if (conflictsVertically(sorted[i], sorted[j])) {
+        conflicts.get(i)!.add(j)
+        conflicts.get(j)!.add(i)
+      }
+    }
+  }
+
+  // Calculate x positions given expansion decisions
+  const calculateXPositions = (expanded: Map<number, boolean>): Map<number, number> => {
+    const xPositions = new Map<number, number>()
+
+    for (let currentLane = 0; currentLane < lanes.length; currentLane++) {
+      for (const item of sorted) {
+        const itemId = itemIds.get(item)!
+        if (laneAssignment.get(itemId) !== currentLane) continue
+
+        if (currentLane === 0) {
+          xPositions.set(itemId, 0)
+        } else {
+          let maxRight = 0
+          for (const conflictId of conflicts.get(itemId)!) {
+            const conflictLane = laneAssignment.get(conflictId)!
+            if (conflictLane < currentLane) {
+              const conflictX = xPositions.get(conflictId)!
+              const conflictWidth = expanded.get(conflictId)
+                ? estimateLabelWidth(sorted[conflictId].annotation)
+                : COLLAPSED_WIDTH
+              maxRight = Math.max(maxRight, conflictX + conflictWidth)
+            }
+          }
+          xPositions.set(itemId, maxRight)
+        }
+      }
+    }
+    return xPositions
+  }
+
+  // Start with all expanded
+  const expanded = new Map<number, boolean>()
+  sorted.forEach((_, i) => expanded.set(i, true))
+
+  // Collapse items that exceed available width
+  let stable = false
   let iterations = 0
-  const maxIterations = 100
-
-  while (hasOverlap && iterations < maxIterations) {
-    hasOverlap = false
+  while (!stable && iterations < 50) {
+    stable = true
     iterations++
+    const xPositions = calculateXPositions(expanded)
 
-    for (let i = 0; i < result.length; i++) {
-      for (let j = i + 1; j < result.length; j++) {
-        if (overlaps(result[i], result[j])) {
-          hasOverlap = true
-          // Move the one that's further right, or if equal, move the lower one
-          const toMove = result[j].leftPx >= result[i].leftPx ? j : i
-          result[toMove].leftPx += emojiSize
+    for (let laneIdx = lanes.length - 1; laneIdx >= 0; laneIdx--) {
+      for (const item of lanes[laneIdx]) {
+        const itemId = itemIds.get(item)!
+        const x = xPositions.get(itemId)!
+        const width = expanded.get(itemId) ? estimateLabelWidth(item.annotation) : COLLAPSED_WIDTH
+
+        if (x + width > availableWidth && expanded.get(itemId)) {
+          expanded.set(itemId, false)
+          stable = false
         }
       }
     }
   }
 
-  // Check if anything is to the right of a milestone at its vertical position
-  const hasAnythingToRight = (index: number, expandedWidth: number): boolean => {
-    const m = result[index]
-    const myTop = m.position - halfHeightPct
-    const myBottom = m.position + halfHeightPct
-    const myRight = m.leftPx + expandedWidth
+  // Try to re-expand collapsed items if they fit
+  for (let laneIdx = 0; laneIdx < lanes.length; laneIdx++) {
+    for (const item of lanes[laneIdx]) {
+      const itemId = itemIds.get(item)!
+      if (!expanded.get(itemId)) {
+        expanded.set(itemId, true)
+        const xPositions = calculateXPositions(expanded)
 
-    for (let i = 0; i < result.length; i++) {
-      if (i === index) continue
+        let fits = true
+        for (let i = 0; i < sorted.length; i++) {
+          const x = xPositions.get(i)!
+          const w = expanded.get(i) ? estimateLabelWidth(sorted[i].annotation) : COLLAPSED_WIDTH
+          if (x + w > availableWidth) {
+            fits = false
+            break
+          }
+        }
 
-      const other = result[i]
-      const otherTop = other.position - halfHeightPct
-      const otherBottom = other.position + halfHeightPct
-
-      // Check vertical overlap
-      const verticalOverlap = !(myBottom + verticalGapPct <= otherTop || myTop - verticalGapPct >= otherBottom)
-      if (!verticalOverlap) continue
-
-      // Check if other is to our right and would overlap with expanded width
-      if (other.leftPx >= m.leftPx && other.leftPx < myRight) {
-        return true
+        if (!fits) expanded.set(itemId, false)
       }
     }
-    return false
   }
 
-  // Expand colored milestones (non-subtle first, then subtle)
-  const coloredIndices = result
-    .map((m, i) => ({ m, i }))
-    .filter(({ m }) => m.color && m.color !== 'subtle')
-    .map(({ i }) => i)
+  const finalX = calculateXPositions(expanded)
 
-  const subtleIndices = result
-    .map((m, i) => ({ m, i }))
-    .filter(({ m }) => m.color === 'subtle')
-    .map(({ i }) => i)
+  // Clamp positions so even collapsed items don't overflow
+  const maxLeftPx = Math.max(0, availableWidth - COLLAPSED_WIDTH)
 
-  for (const idx of [...coloredIndices, ...subtleIndices]) {
-    const expandedWidth = estimateLabelWidth(result[idx].annotation)
-
-    // Don't expand if it would go off screen
-    if (result[idx].leftPx + expandedWidth > availableWidth) {
-      continue
-    }
-
-    // Expand if nothing to the right
-    if (!hasAnythingToRight(idx, expandedWidth)) {
-      result[idx].expanded = true
-    }
-  }
-
-  return result
+  return sorted.map((item, i) => ({
+    ...item,
+    column: laneAssignment.get(i) ?? 0,
+    leftPx: Math.min(finalX.get(i) ?? 0, maxLeftPx),
+    height: PORTRAIT_EMOJI_HEIGHT,
+    expanded: expanded.get(i) ?? false,
+  }))
 }
 
 // ============================================================================
@@ -380,9 +416,8 @@ export function TimelineView({
   // Portrait: Get point milestones with column assignments
   const portraitMilestones = useMemo(() => {
     if (isLandscape) return []
-    const containerHeight = windowSize.height - 100
-    return assignPortraitColumns(baseMilestones, containerHeight, windowSize.width)
-  }, [baseMilestones, windowSize.height, windowSize.width, isLandscape])
+    return assignPortraitColumns(baseMilestones, windowSize.width)
+  }, [baseMilestones, windowSize.width, isLandscape])
 
   // Landscape: Calculate row range for dynamic height
   const { minRow, maxRow, milestonesHeight } = useMemo(() => {
