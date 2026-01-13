@@ -23,8 +23,9 @@ function getDayColor(day: DayInfo): string {
   return getCssVar(day.isOddWeek ? '--color-text-tertiary' : '--color-text-secondary')
 }
 
-// Colors that need a different text color for readability (not salmon/gold - their base colors are readable)
-const TEXT_COLOR_OVERRIDES = ['subtle', 'orange']
+// Only subtle needs text override (uses subtle-text which adapts to color scheme)
+// Other colors (orange, gold, salmon) use their base colors which are readable in both modes
+const TEXT_COLOR_OVERRIDES = ['subtle']
 
 function getAnnotationTextColor(day: DayInfo): string {
   if (day.color && TEXT_COLOR_OVERRIDES.includes(day.color)) {
