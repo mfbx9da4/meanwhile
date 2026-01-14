@@ -221,15 +221,6 @@ function layoutMilestonesCore(
     return maxRight
   }
 
-  const hasAnyYOverlap = (index: number) => {
-    const ms = layouts[index]
-    for (let j = 0; j < n; j++) {
-      if (j === index) continue
-      if (overlapsY(ms, layouts[j])) return true
-    }
-    return false
-  }
-
   // collapse loop
   for (let iter = 0; iter < n+2; iter++) {
     const maxRight = runPass()
