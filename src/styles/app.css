@@ -1636,7 +1636,7 @@ body {
 }
 
 .landing-text {
-	color: white;
+	color: #fff0ed; /* Light peachy-pink tint for red background */
 	font-size: 16px;
 	font-weight: 600;
 	text-align: center;
@@ -1657,7 +1657,7 @@ body {
 
 .landing-button {
 	background: var(--color-primary);
-	color: white;
+	color: #d4f5e0; /* Light mint tint for green background */
 	border: none;
 	padding: 14px 28px;
 	border-radius: 25px;
