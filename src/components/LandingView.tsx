@@ -1,12 +1,14 @@
 import { flushSync } from "preact/compat";
 
 type LandingViewProps = {
-	dueIndex: number;
 	onEnter: () => void;
 };
 
-export function LandingView({ dueIndex, onEnter }: LandingViewProps) {
+export function LandingView({ onEnter }: LandingViewProps) {
 	const handleClick = () => {
+		if (navigator.vibrate) {
+			navigator.vibrate(10);
+		}
 		if (document.startViewTransition) {
 			document.startViewTransition(() => {
 				flushSync(() => {
@@ -20,10 +22,7 @@ export function LandingView({ dueIndex, onEnter }: LandingViewProps) {
 
 	return (
 		<div class="landing-view">
-			<div
-				class="landing-circle"
-				style={{ viewTransitionName: `day-${dueIndex}` }}
-			>
+			<div class="landing-circle">
 				<span class="landing-emoji">🐣</span>
 				<span class="landing-text">
 					Gaby & David

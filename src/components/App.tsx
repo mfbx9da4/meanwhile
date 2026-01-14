@@ -350,7 +350,7 @@ export function App() {
 	}, []);
 
 	if (showLanding) {
-		return <LandingView dueIndex={dueIndex} onEnter={handleLandingEnter} />;
+		return <LandingView onEnter={handleLandingEnter} />;
 	}
 
 	return (
