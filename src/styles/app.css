@@ -1622,7 +1622,7 @@ body {
 	width: 200px;
 	height: 200px;
 	border-radius: 50%;
-	background: var(--color-red);
+	background: radial-gradient(circle at 35% 35%, #f07a75 0%, var(--color-red) 50%, #d64a45 100%);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1646,12 +1646,12 @@ body {
 @keyframes gentle-pulse {
 	0%,
 	100% {
-		transform: scale(1);
+		background: #2d5a3d;
 		box-shadow: 0 4px 12px rgba(45, 90, 61, 0.3);
 	}
 	50% {
-		transform: scale(1.02);
-		box-shadow: 0 6px 14px rgba(45, 90, 61, 0.35);
+		background: #3a7350;
+		box-shadow: 0 6px 16px rgba(58, 115, 80, 0.4);
 	}
 }
 
@@ -1677,6 +1677,34 @@ body {
 .landing-button:active {
 	animation: none;
 	transform: scale(0.98);
+}
+
+/* Dark mode adjustments for landing page */
+@media (prefers-color-scheme: dark) {
+	.landing-circle {
+		box-shadow: 0 4px 30px rgba(248, 113, 113, 0.5);
+	}
+
+	.landing-button {
+		color: #1a3d2a; /* Dark green text on light green background */
+		box-shadow: 0 4px 20px rgba(125, 206, 160, 0.4);
+	}
+
+	@keyframes gentle-pulse {
+		0%,
+		100% {
+			background: #7dcea0;
+			box-shadow: 0 4px 20px rgba(125, 206, 160, 0.4);
+		}
+		50% {
+			background: #9fdfb8;
+			box-shadow: 0 6px 24px rgba(159, 223, 184, 0.5);
+		}
+	}
+
+	.landing-button:hover {
+		box-shadow: 0 6px 24px rgba(125, 206, 160, 0.5);
+	}
 }
 
 /* View transition for landing page to main app */
