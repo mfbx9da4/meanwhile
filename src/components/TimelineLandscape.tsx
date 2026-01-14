@@ -109,6 +109,34 @@ export function TimelineLandscape({
 					class="timeline-milestones-landscape"
 					style={{ height: `${milestonesHeight}px` }}
 				>
+					{/* Stems layer - rendered first, appears behind */}
+					{milestones.map((m) => {
+						const stemHeight = 45 + (m.row - minRow) * ROW_HEIGHT;
+						return (
+							<div
+								key={`stem-${m.index}`}
+								class={`timeline-milestone-landscape ${m.color ? `colored color-${m.color}` : ""} ${highlightedDays.value.indices.has(m.index) ? "highlighted" : ""}`}
+								style={{
+									left: `${m.position}%`,
+									...(m.color
+										? { "--milestone-color": `var(--color-${m.color})` }
+										: {}),
+									...(highlightedDays.value.indices.has(m.index) &&
+									highlightedDays.value.color
+										? {
+												"--highlight-color": `var(--color-${highlightedDays.value.color})`,
+											}
+										: {}),
+								}}
+							>
+								<div
+									class="timeline-milestone-stem-landscape"
+									style={{ height: `${stemHeight}px` }}
+								/>
+							</div>
+						);
+					})}
+					{/* Labels layer - rendered second, appears in front */}
 					{milestones.map((m) => {
 						const stemHeight = 45 + (m.row - minRow) * ROW_HEIGHT;
 						const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation)
