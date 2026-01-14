@@ -1647,11 +1647,11 @@ body {
 	0%,
 	100% {
 		background: #2d5a3d;
-		box-shadow: 0 4px 12px rgba(45, 90, 61, 0.3);
+		box-shadow: 0 4px 12px rgba(45, 90, 61, 0.3), inset 0 0 0 0px rgba(255, 255, 255, 0.2);
 	}
 	50% {
 		background: #3a7350;
-		box-shadow: 0 6px 16px rgba(58, 115, 80, 0.4);
+		box-shadow: 0 6px 16px rgba(58, 115, 80, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
 	}
 }
 
@@ -1694,11 +1694,11 @@ body {
 		0%,
 		100% {
 			background: #7dcea0;
-			box-shadow: 0 4px 20px rgba(125, 206, 160, 0.4);
+			box-shadow: 0 4px 20px rgba(125, 206, 160, 0.4), inset 0 0 0 0px rgba(255, 255, 255, 0.2);
 		}
 		50% {
 			background: #9fdfb8;
-			box-shadow: 0 6px 24px rgba(159, 223, 184, 0.5);
+			box-shadow: 0 6px 24px rgba(159, 223, 184, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
 		}
 	}
 
