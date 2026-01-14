@@ -113,8 +113,6 @@ export function TimelineLandscape({
 						// Stem height determines vertical position - taller stem = higher up
 						// All milestones anchored at bottom: 0, stem creates the spacing
 						const stemHeight = 45 + (m.row - minRow) * ROW_HEIGHT;
-						// Lower rows get higher z-index so their content appears above stems from higher rows
-						const zIndex = maxRow - m.row + 1;
 
 						const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation)
 							? { viewTransitionName: `day-${m.index}` }
@@ -125,7 +123,6 @@ export function TimelineLandscape({
 								class={`timeline-milestone-landscape ${m.color ? `colored color-${m.color}` : ""} ${m.isToday ? "today" : ""} ${selectedDayIndex === m.index ? "selected" : ""} ${highlightedDays.value.indices.has(m.index) ? "highlighted" : ""}`}
 								style={{
 									left: `${m.position}%`,
-									zIndex,
 									...(m.color
 										? { "--milestone-color": `var(--color-${m.color})` }
 										: {}),
@@ -136,11 +133,11 @@ export function TimelineLandscape({
 											}
 										: {}),
 								}}
-								onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
 							>
 								<div
 									class="timeline-milestone-content-landscape timeline-label"
 									style={viewTransitionStyle}
+									onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
 								>
 									<span class="timeline-milestone-emoji">
 										{annotationEmojis[m.annotation] || ""}
@@ -299,16 +296,18 @@ export function TimelineLandscape({
 													}
 												: {}),
 										}}
-										onClick={(e) => {
-											const day = days[bar.startIndex];
-											if (day) onDayClick(e as unknown as MouseEvent, day);
-										}}
 									>
 										<div
 											class="timeline-gantt-stem-landscape"
 											style={{ height: `${stemHeight}px` }}
 										/>
-										<div class="timeline-gantt-label-content-landscape timeline-label">
+										<div
+											class="timeline-gantt-label-content-landscape timeline-label"
+											onClick={(e) => {
+												const day = days[bar.startIndex];
+												if (day) onDayClick(e as unknown as MouseEvent, day);
+											}}
+										>
 											<span class="timeline-gantt-label-emoji">
 												{bar.emoji}
 											</span>
