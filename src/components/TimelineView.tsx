@@ -484,8 +484,8 @@ export function TimelineView({
 			setPortraitLayout({
 				left: Math.floor(rect.left),
 				top: Math.floor(rect.top),
-				// Add 20px safety margin to account for CSS rendering differences
-				width: Math.floor(windowSize.width - rect.left - 30),
+				// Smaller margin on mobile (narrow screens)
+				width: Math.floor(windowSize.width - rect.left - 10),
 				height: Math.floor(rect.height),
 			});
 		}
