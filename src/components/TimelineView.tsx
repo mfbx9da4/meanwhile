@@ -159,6 +159,7 @@ export function TimelineView({
 				annotationEmojis={annotationEmojis}
 				onDayClick={onDayClick}
 				windowWidth={windowSize.width}
+				windowHeight={windowSize.height}
 			/>
 		);
 	}

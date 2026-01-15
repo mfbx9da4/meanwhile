@@ -1,4 +1,10 @@
-import { useRef, useState, useCallback, useMemo } from "preact/hooks";
+import {
+	useRef,
+	useState,
+	useCallback,
+	useMemo,
+	useLayoutEffect,
+} from "preact/hooks";
 import type { DayInfo } from "../types";
 import { highlightedDays } from "./App";
 import type {
@@ -13,25 +19,47 @@ import type {
 const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
 
 // Milestone styling constants
-const ROW_HEIGHT = 42; // vertical spacing between rows
+const ROW_HEIGHT = 42; // vertical spacing between stacked milestones
 const GANTT_ROW_HEIGHT = 24; // height of gantt bar rows
 const GANTT_BAR_HEIGHT = 18; // height of individual gantt bars
 const MILESTONE_PADDING = 20; // horizontal padding inside milestone
 const MILESTONE_GAP = 8; // minimum gap between milestones
 const EMOJI_WIDTH = 18; // approximate emoji width
+const EXPANDED_WIDTH = 120; // width when expanded
+const COLLAPSED_WIDTH = 24; // width when collapsed (emoji only)
+const BASE_STEM_HEIGHT = 45; // minimum stem height
 
 // ============================================================================
 // LAYOUT TYPES
 // ============================================================================
 
+type LandscapeLayoutInput = {
+	left: number; // X position in pixels (center of milestone)
+	width: number; // Current width of the milestone
+	isColoured: boolean;
+};
+
+type LandscapeLayoutOutput = {
+	top: number; // Y offset from baseline (0 = closest to line, positive = higher up)
+	collapsed: boolean;
+};
+
+type LandscapeLayoutOptions = {
+	maxHeight: number;
+	expandedWidth?: number;
+	collapsedWidth?: number;
+};
+
 type MilestoneWithLayout = BaseMilestone & {
-	row: number;
+	topPx: number;
 	width: number;
+	expanded: boolean;
 };
 
 type GanttBarLandscape = GanttBarBase & {
 	barRow: number;
-	labelRow: number;
+	labelTop: number;
+	labelExpanded: boolean;
 };
 
 // ============================================================================
@@ -46,84 +74,220 @@ function measureTextWidth(text: string, font: string): number {
 	return ctx.measureText(text).width;
 }
 
-function assignRows(
-	milestones: BaseMilestone[],
-	containerWidth: number,
-	annotationEmojis: Record<string, string>,
-): MilestoneWithLayout[] {
-	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+// Check if two items overlap horizontally (with gap)
+function overlapsX(
+	a: { left: number; width: number },
+	b: { left: number; width: number },
+): boolean {
+	const aLeft = a.left - a.width / 2;
+	const aRight = a.left + a.width / 2;
+	const bLeft = b.left - b.width / 2;
+	const bRight = b.left + b.width / 2;
+	// Two intervals overlap if neither is entirely to the left of the other
+	return aRight + MILESTONE_GAP > bLeft && bRight + MILESTONE_GAP > aLeft;
+}
 
-	// Calculate width for each milestone
-	const withWidths = milestones.map((m) => {
-		const hasEmoji = !!annotationEmojis[m.annotation];
-		const textWidth = measureTextWidth(m.annotation, font);
-		const width = textWidth + MILESTONE_PADDING + (hasEmoji ? EMOJI_WIDTH : 0);
-		return { ...m, width };
-	});
+/**
+ * Core layout algorithm for landscape milestones.
+ * Items have fixed X positions and variable Y positions (stacking vertically).
+ * When vertical space is exceeded, items are collapsed (width reduced) to decrease horizontal overlap.
+ */
+function layoutLandscapeMilestonesCore<T extends LandscapeLayoutInput>(
+	unsortedMilestones: T[],
+	opts: LandscapeLayoutOptions,
+): { layouts: (T & LandscapeLayoutOutput)[]; ok: boolean } {
+	const expandedWidth = opts.expandedWidth ?? EXPANDED_WIDTH;
+	const collapsedWidth = opts.collapsedWidth ?? COLLAPSED_WIDTH;
+	const maxHeight = opts.maxHeight;
 
-	// Sort by position (left to right)
-	const sorted = [...withWidths].sort((a, b) => a.position - b.position);
+	// Sort by left position (left to right)
+	const layouts: (T & LandscapeLayoutOutput & { width: number })[] = [
+		...unsortedMilestones,
+	]
+		.sort((a, b) => a.left - b.left)
+		.map((ms) => ({
+			...ms,
+			width: expandedWidth,
+			top: 0,
+			collapsed: false,
+		}));
 
-	// Track occupied ranges per row
-	const rowOccupancy = new Map<number, Array<{ left: number; right: number }>>();
-	const result: MilestoneWithLayout[] = [];
+	const n = layouts.length;
 
-	for (const milestone of sorted) {
-		const centerPx = (milestone.position / 100) * containerWidth;
-		const leftPx = centerPx - milestone.width / 2;
-		const rightPx = centerPx + milestone.width / 2;
+	const runPass = () => {
+		let maxTop = 0;
 
-		let assignedRow = 0;
-		const maxSearch = 10;
+		for (let i = 0; i < n; i++) {
+			const base = layouts[i];
 
-		for (let distance = 0; distance < maxSearch; distance++) {
-			const rowsToTry = distance === 0 ? [0] : [distance, -distance];
-
-			for (const row of rowsToTry) {
-				const occupied = rowOccupancy.get(row) || [];
-				const hasConflict = occupied.some(
-					(range) =>
-						!(
-							rightPx + MILESTONE_GAP < range.left ||
-							leftPx - MILESTONE_GAP > range.right
-						),
-				);
-
-				if (!hasConflict) {
-					assignedRow = row;
-					break;
+			// Find all previously placed milestones that overlap horizontally
+			const overlapping: { top: number }[] = [];
+			for (let j = 0; j < i; j++) {
+				const other = layouts[j];
+				if (overlapsX(base, other)) {
+					overlapping.push({ top: other.top });
 				}
 			}
 
-			const occupied = rowOccupancy.get(assignedRow) || [];
-			const hasConflict = occupied.some(
-				(range) =>
-					!(
-						rightPx + MILESTONE_GAP < range.left ||
-						leftPx - MILESTONE_GAP > range.right
-					),
-			);
-			if (!hasConflict) break;
+			// Find the first available Y position (closest to 0)
+			// Sort occupied positions and find first gap
+			if (overlapping.length === 0) {
+				base.top = 0;
+			} else {
+				// Occupied Y positions (each milestone occupies [top, top + ROW_HEIGHT])
+				const occupied = overlapping
+					.map((o) => o.top)
+					.sort((a, b) => a - b);
+
+				// Try position 0 first
+				let foundPosition = false;
+				if (occupied[0] >= ROW_HEIGHT) {
+					base.top = 0;
+					foundPosition = true;
+				}
+
+				// Look for gaps between occupied positions
+				if (!foundPosition) {
+					for (let k = 0; k < occupied.length - 1; k++) {
+						const gapStart = occupied[k] + ROW_HEIGHT;
+						const gapEnd = occupied[k + 1];
+						if (gapEnd - gapStart >= ROW_HEIGHT) {
+							base.top = gapStart;
+							foundPosition = true;
+							break;
+						}
+					}
+				}
+
+				// Place after all existing
+				if (!foundPosition) {
+					base.top = occupied[occupied.length - 1] + ROW_HEIGHT;
+				}
+			}
+
+			if (base.top + ROW_HEIGHT > maxTop) {
+				maxTop = base.top + ROW_HEIGHT;
+			}
 		}
 
-		const occupied = rowOccupancy.get(assignedRow) || [];
-		occupied.push({ left: leftPx, right: rightPx });
-		rowOccupancy.set(assignedRow, occupied);
+		return maxTop;
+	};
 
-		result.push({ ...milestone, row: assignedRow });
+	// Collapse loop - iterate until layout fits or no more candidates
+	for (let iter = 0; iter < n + 2; iter++) {
+		const maxTop = runPass();
+
+		if (maxTop <= maxHeight) {
+			return { layouts, ok: true };
+		}
+
+		// Find candidate to collapse: items that overlap horizontally with the topmost items
+		const findCandidate = (): (T & LandscapeLayoutOutput & { width: number }) | null => {
+			const expanded = layouts.filter((ms) => !ms.collapsed);
+			if (expanded.length === 0) return null;
+
+			// Find the maximum top position
+			const topmost = Math.max(...layouts.map((ms) => ms.top));
+
+			// Find all milestones at the topmost position
+			const atTop = layouts.filter((ms) => ms.top === topmost);
+
+			// Find all expanded milestones that overlap horizontally with those at top
+			const candidates = new Set<T & LandscapeLayoutOutput & { width: number }>();
+			for (const ms of atTop) {
+				for (const other of expanded) {
+					if (overlapsX(ms, other)) {
+						candidates.add(other);
+					}
+				}
+			}
+
+			if (candidates.size === 0) return null;
+
+			// Collapse priority: non-colored first, then leftmost
+			const arr = Array.from(candidates);
+			const nonColoured = arr.filter((ms) => !ms.isColoured);
+			const coloured = arr.filter((ms) => ms.isColoured);
+
+			const findLeftmost = (
+				list: (T & LandscapeLayoutOutput & { width: number })[],
+			) => {
+				let best = list[0];
+				for (const ms of list) {
+					if (ms.left < best.left) best = ms;
+				}
+				return best;
+			};
+
+			if (nonColoured.length > 0) return findLeftmost(nonColoured);
+			if (coloured.length > 0) return findLeftmost(coloured);
+			return arr[0];
+		};
+
+		const candidate = findCandidate();
+		if (!candidate) {
+			return { layouts, ok: false };
+		}
+
+		candidate.collapsed = true;
+		candidate.width = collapsedWidth;
 	}
 
-	return result;
+	return { layouts, ok: false };
+}
+
+/**
+ * Wrapper that prepares input and processes output for landscape milestone layout.
+ */
+function layoutLandscapeMilestones(
+	milestones: BaseMilestone[],
+	containerWidth: number,
+	maxHeight: number,
+	annotationEmojis: Record<string, string>,
+): MilestoneWithLayout[] {
+	if (milestones.length === 0 || containerWidth <= 0 || maxHeight <= 0) {
+		return [];
+	}
+
+	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+
+	// Calculate width and center position for each milestone
+	const inputLayouts = milestones.map((m) => {
+		const hasEmoji = !!annotationEmojis[m.annotation];
+		const textWidth = measureTextWidth(m.annotation, font);
+		const naturalWidth = textWidth + MILESTONE_PADDING + (hasEmoji ? EMOJI_WIDTH : 0);
+		const centerPx = (m.position / 100) * containerWidth;
+
+		return {
+			...m,
+			left: centerPx,
+			width: Math.min(naturalWidth, EXPANDED_WIDTH),
+			isColoured: !!m.color,
+		};
+	});
+
+	const { layouts } = layoutLandscapeMilestonesCore(inputLayouts, {
+		maxHeight,
+		expandedWidth: EXPANDED_WIDTH,
+		collapsedWidth: COLLAPSED_WIDTH,
+	});
+
+	return layouts.map((layout) => ({
+		...layout,
+		topPx: layout.top,
+		expanded: !layout.collapsed,
+	}));
 }
 
 function computeGanttBars(
 	rangeMilestoneLookup: RangeMilestoneLookup,
 	totalDays: number,
 	containerWidth: number,
+	maxLabelHeight: number,
 ): GanttBarLandscape[] {
 	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
 
-	const bars: Omit<GanttBarLandscape, "barRow" | "labelRow">[] = [];
+	const bars: Omit<GanttBarLandscape, "barRow" | "labelTop" | "labelExpanded">[] = [];
 	for (const [label, range] of Object.entries(rangeMilestoneLookup)) {
 		const startPosition = (range.startIndex / totalDays) * 100;
 		const endPosition = (range.endIndex / totalDays) * 100;
@@ -144,10 +308,10 @@ function computeGanttBars(
 
 	bars.sort((a, b) => a.startPosition - b.startPosition);
 
+	// Assign bar rows (for the actual range bars - these don't collapse)
 	const barRowOccupancy: Array<{ left: number; right: number }>[] = [];
-	const labelRowOccupancy: Array<{ left: number; right: number }>[] = [];
+	const barsWithRows: (typeof bars[number] & { barRow: number })[] = [];
 
-	const result: GanttBarLandscape[] = [];
 	for (const bar of bars) {
 		const barLeftPx = (bar.startPosition / 100) * containerWidth;
 		const barRightPx = (bar.endPosition / 100) * containerWidth;
@@ -168,37 +332,35 @@ function computeGanttBars(
 		if (!barRowOccupancy[assignedBarRow]) barRowOccupancy[assignedBarRow] = [];
 		barRowOccupancy[assignedBarRow].push({ left: barLeftPx, right: barRightPx });
 
-		const labelCenterPx = (barLeftPx + barRightPx) / 2;
-		const labelLeftPx = labelCenterPx - bar.labelWidth / 2;
-		const labelRightPx = labelCenterPx + bar.labelWidth / 2;
-
-		let assignedLabelRow = 0;
-		for (let row = 0; row < labelRowOccupancy.length + 1; row++) {
-			const occupied = labelRowOccupancy[row] || [];
-			const hasConflict = occupied.some(
-				(range) =>
-					!(
-						labelRightPx + MILESTONE_GAP < range.left ||
-						labelLeftPx - MILESTONE_GAP > range.right
-					),
-			);
-			if (!hasConflict) {
-				assignedLabelRow = row;
-				break;
-			}
-		}
-
-		if (!labelRowOccupancy[assignedLabelRow])
-			labelRowOccupancy[assignedLabelRow] = [];
-		labelRowOccupancy[assignedLabelRow].push({
-			left: labelLeftPx,
-			right: labelRightPx,
-		});
-
-		result.push({ ...bar, barRow: assignedBarRow, labelRow: assignedLabelRow });
+		barsWithRows.push({ ...bar, barRow: assignedBarRow });
 	}
 
-	return result;
+	// Use collapsing algorithm for labels
+	// Note: we use barWidth to preserve the original bar width (percentage) since the layout
+	// algorithm will overwrite 'width' with label width (pixels)
+	const labelInputs = barsWithRows.map((bar) => {
+		const centerPx = ((bar.startPosition + bar.endPosition) / 2 / 100) * containerWidth;
+		return {
+			...bar,
+			barWidth: bar.width, // preserve original bar width
+			left: centerPx,
+			width: EXPANDED_WIDTH,
+			isColoured: !!bar.color,
+		};
+	});
+
+	const { layouts: labelLayouts } = layoutLandscapeMilestonesCore(labelInputs, {
+		maxHeight: maxLabelHeight,
+		expandedWidth: EXPANDED_WIDTH,
+		collapsedWidth: COLLAPSED_WIDTH,
+	});
+
+	return labelLayouts.map((layout) => ({
+		...layout,
+		width: layout.barWidth, // restore original bar width
+		labelTop: layout.top,
+		labelExpanded: !layout.collapsed,
+	}));
 }
 
 // ============================================================================
@@ -218,6 +380,7 @@ type TimelineLandscapeProps = {
 	annotationEmojis: Record<string, string>;
 	onDayClick: (e: MouseEvent, day: DayInfo) => void;
 	windowWidth: number;
+	windowHeight: number;
 };
 
 export function TimelineLandscape({
@@ -233,48 +396,62 @@ export function TimelineLandscape({
 	annotationEmojis,
 	onDayClick,
 	windowWidth,
+	windowHeight,
 }: TimelineLandscapeProps) {
 	const lineRef = useRef<HTMLDivElement>(null);
+	const milestonesContainerRef = useRef<HTMLDivElement>(null);
 	const [hoverPosition, setHoverPosition] = useState<number | null>(null);
 	const [hoverDayIndex, setHoverDayIndex] = useState<number | null>(null);
 
-	const containerWidth = windowWidth - 120;
+	// Measure available height for milestones from DOM
+	const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
 
-	// Compute milestone layouts
-	const milestones = useMemo(() => {
-		return assignRows(baseMilestones, containerWidth, annotationEmojis);
-	}, [baseMilestones, containerWidth, annotationEmojis]);
-
-	// Compute row range for dynamic height
-	const { minRow, maxRow, milestonesHeight } = useMemo(() => {
-		if (milestones.length === 0) {
-			return { minRow: 0, maxRow: 0, milestonesHeight: ROW_HEIGHT };
+	useLayoutEffect(() => {
+		if (milestonesContainerRef.current) {
+			// Use a portion of window height as max milestone area
+			// This gives us the constraint for when to start collapsing
+			const maxAvailable = Math.floor(windowHeight * 0.35);
+			setMeasuredHeight(maxAvailable);
 		}
-		const rows = milestones.map((m) => m.row);
-		const min = Math.min(...rows);
-		const max = Math.max(...rows);
-		const aboveRows = max + 1;
-		const belowRows = Math.abs(min);
-		return {
-			minRow: min,
-			maxRow: max,
-			milestonesHeight: (aboveRows + belowRows) * ROW_HEIGHT,
-		};
+	}, [windowHeight]);
+
+	const containerWidth = windowWidth - 120;
+	const maxMilestoneHeight = measuredHeight ?? Math.floor(windowHeight * 0.35);
+
+	// Compute milestone layouts using the new algorithm
+	const milestones = useMemo(() => {
+		return layoutLandscapeMilestones(
+			baseMilestones,
+			containerWidth,
+			maxMilestoneHeight,
+			annotationEmojis,
+		);
+	}, [baseMilestones, containerWidth, maxMilestoneHeight, annotationEmojis]);
+
+	// Compute actual height needed based on layout results
+	const milestonesHeight = useMemo(() => {
+		if (milestones.length === 0) return ROW_HEIGHT;
+		const maxTop = Math.max(...milestones.map((m) => m.topPx));
+		return maxTop + ROW_HEIGHT + BASE_STEM_HEIGHT;
 	}, [milestones]);
+
+	// Max height for gantt labels (similar constraint as milestones)
+	const maxGanttLabelHeight = Math.floor(windowHeight * 0.25);
 
 	// Compute gantt bars
 	const ganttBars = useMemo(() => {
-		return computeGanttBars(rangeMilestoneLookup, totalDays, containerWidth);
-	}, [rangeMilestoneLookup, totalDays, containerWidth]);
+		return computeGanttBars(rangeMilestoneLookup, totalDays, containerWidth, maxGanttLabelHeight);
+	}, [rangeMilestoneLookup, totalDays, containerWidth, maxGanttLabelHeight]);
 
-	// Compute gantt row counts
-	const { ganttBarRowCount, ganttLabelRowCount } = useMemo(() => {
+	// Compute gantt dimensions
+	const { ganttBarRowCount, ganttLabelsHeight } = useMemo(() => {
 		if (ganttBars.length === 0) {
-			return { ganttBarRowCount: 0, ganttLabelRowCount: 0 };
+			return { ganttBarRowCount: 0, ganttLabelsHeight: 0 };
 		}
+		const maxLabelTop = Math.max(...ganttBars.map((b) => b.labelTop));
 		return {
 			ganttBarRowCount: Math.max(...ganttBars.map((b) => b.barRow)) + 1,
-			ganttLabelRowCount: Math.max(...ganttBars.map((b) => b.labelRow)) + 1,
+			ganttLabelsHeight: maxLabelTop + ROW_HEIGHT,
 		};
 	}, [ganttBars]);
 
@@ -302,12 +479,13 @@ export function TimelineLandscape({
 			<div class="timeline-content-landscape">
 				{/* Milestones container - stems layer (behind) then labels layer (in front) */}
 				<div
+					ref={milestonesContainerRef}
 					class="timeline-milestones-landscape"
 					style={{ height: `${milestonesHeight}px` }}
 				>
 					{/* Stems layer - rendered first, appears behind */}
 					{milestones.map((m) => {
-						const stemHeight = 45 + (m.row - minRow) * ROW_HEIGHT;
+						const stemHeight = BASE_STEM_HEIGHT + m.topPx;
 						return (
 							<div
 								key={`stem-${m.index}`}
@@ -334,7 +512,7 @@ export function TimelineLandscape({
 					})}
 					{/* Labels layer - rendered second, appears in front */}
 					{milestones.map((m) => {
-						const stemHeight = 45 + (m.row - minRow) * ROW_HEIGHT;
+						const stemHeight = BASE_STEM_HEIGHT + m.topPx;
 						const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation)
 							? { viewTransitionName: `day-${m.index}` }
 							: {};
@@ -356,16 +534,28 @@ export function TimelineLandscape({
 										: {}),
 								}}
 							>
-								<div
-									class="timeline-milestone-content-landscape timeline-label"
-									style={viewTransitionStyle}
-									onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
-								>
-									<span class="timeline-milestone-emoji">
-										{annotationEmojis[m.annotation] || ""}
-									</span>
-									<span class="timeline-milestone-label">{m.annotation}</span>
-								</div>
+								{m.expanded ? (
+									<div
+										class="timeline-milestone-content-landscape timeline-label"
+										style={viewTransitionStyle}
+										onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
+									>
+										<span class="timeline-milestone-emoji">
+											{annotationEmojis[m.annotation] || ""}
+										</span>
+										<span class="timeline-milestone-label">{m.annotation}</span>
+									</div>
+								) : (
+									<div
+										class="timeline-milestone-emoji-only"
+										style={viewTransitionStyle}
+										onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
+									>
+										<span class="timeline-milestone-emoji">
+											{annotationEmojis[m.annotation] || ""}
+										</span>
+									</div>
+								)}
 							</div>
 						);
 					})}
@@ -448,7 +638,7 @@ export function TimelineLandscape({
 					<div
 						class="timeline-gantt-section-landscape"
 						style={{
-							height: `${ganttLabelRowCount * ROW_HEIGHT + ganttBarRowCount * GANTT_ROW_HEIGHT + 10}px`,
+							height: `${ganttLabelsHeight + ganttBarRowCount * GANTT_ROW_HEIGHT + 10}px`,
 						}}
 					>
 						{/* Bars at top */}
@@ -489,19 +679,19 @@ export function TimelineLandscape({
 						{/* Labels below bars with stems going up from center of range */}
 						<div
 							class="timeline-gantt-labels-landscape"
-							style={{ height: `${ganttLabelRowCount * ROW_HEIGHT}px` }}
+							style={{ height: `${ganttLabelsHeight}px` }}
 						>
 							{ganttBars.map((bar) => {
 								const isHighlighted = highlightedDays.value.indices.has(
 									bar.startIndex,
 								);
-								const stemHeight = 20 + bar.labelRow * ROW_HEIGHT;
+								const stemHeight = 20 + bar.labelTop;
 								const centerPosition =
 									(bar.startPosition + bar.endPosition) / 2;
 								return (
 									<div
 										key={`label-${bar.label}`}
-										class={`timeline-gantt-item-landscape ${bar.color ? `colored color-${bar.color}` : ""} ${isHighlighted ? "highlighted" : ""}`}
+										class={`timeline-gantt-item-landscape ${bar.color ? `colored color-${bar.color}` : ""} ${isHighlighted ? "highlighted" : ""} ${bar.labelExpanded ? "expanded" : "collapsed"}`}
 										style={{
 											left: `${centerPosition}%`,
 											top: 0,
@@ -519,18 +709,32 @@ export function TimelineLandscape({
 											class="timeline-gantt-stem-landscape"
 											style={{ height: `${stemHeight}px` }}
 										/>
-										<div
-											class="timeline-gantt-label-content-landscape timeline-label"
-											onClick={(e) => {
-												const day = days[bar.startIndex];
-												if (day) onDayClick(e as unknown as MouseEvent, day);
-											}}
-										>
-											<span class="timeline-gantt-label-emoji">
-												{bar.emoji}
-											</span>
-											<span class="timeline-gantt-label-text">{bar.label}</span>
-										</div>
+										{bar.labelExpanded ? (
+											<div
+												class="timeline-gantt-label-content-landscape timeline-label"
+												onClick={(e) => {
+													const day = days[bar.startIndex];
+													if (day) onDayClick(e as unknown as MouseEvent, day);
+												}}
+											>
+												<span class="timeline-gantt-label-emoji">
+													{bar.emoji}
+												</span>
+												<span class="timeline-gantt-label-text">{bar.label}</span>
+											</div>
+										) : (
+											<div
+												class="timeline-gantt-emoji-only"
+												onClick={(e) => {
+													const day = days[bar.startIndex];
+													if (day) onDayClick(e as unknown as MouseEvent, day);
+												}}
+											>
+												<span class="timeline-gantt-label-emoji">
+													{bar.emoji}
+												</span>
+											</div>
+										)}
 									</div>
 								);
 							})}

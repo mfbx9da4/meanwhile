@@ -1250,6 +1250,35 @@ body {
 	line-height: 1.2;
 }
 
+/* Emoji-only compact gantt label (collapsed state) */
+.timeline-gantt-emoji-only {
+	background: var(--bar-color, var(--color-surface));
+	border: 1px solid var(--bar-color, var(--color-border));
+	border-radius: 50%;
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	z-index: 10;
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+.timeline-gantt-emoji-only .timeline-gantt-label-emoji {
+	font-size: 12px;
+	line-height: 1;
+}
+
+.timeline-gantt-item-landscape.colored .timeline-gantt-emoji-only {
+	border-color: transparent;
+}
+
+.timeline-gantt-item-landscape:not(.colored) .timeline-gantt-emoji-only {
+	background: var(--color-border);
+}
+
 .timeline-gantt-stem-landscape {
 	width: 2px;
 	background: var(--bar-color, var(--color-border));
@@ -1585,6 +1614,35 @@ body {
 }
 
 .timeline-gantt-item-portrait:not(.colored) .timeline-gantt-label-portrait {
+	background: var(--color-border);
+}
+
+/* Emoji-only compact gantt label for portrait (collapsed state) */
+.timeline-gantt-emoji-only-portrait {
+	background: var(--bar-color, var(--color-surface));
+	border: 1px solid var(--bar-color, var(--color-border));
+	border-radius: 50%;
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	z-index: 10;
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+.timeline-gantt-emoji-only-portrait .timeline-gantt-label-emoji {
+	font-size: 12px;
+	line-height: 1;
+}
+
+.timeline-gantt-item-portrait.colored .timeline-gantt-emoji-only-portrait {
+	border-color: transparent;
+}
+
+.timeline-gantt-item-portrait:not(.colored) .timeline-gantt-emoji-only-portrait {
 	background: var(--color-border);
 }
 

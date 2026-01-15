@@ -340,9 +340,6 @@ export function App() {
 		setViewMode((prev) => getNextViewMode(prev, windowSize.width));
 	}, [windowSize.width]);
 
-	// Due date index for view transition
-	const dueIndex = totalDays - 1;
-
 	const handleLandingEnter = useCallback(() => {
 		localStorage.setItem(LANDING_SEEN_KEY, "true");
 		setViewMode("timeline"); // Use timeline view so Due milestone is visible for transition

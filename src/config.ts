@@ -80,7 +80,7 @@ export const CONFIG = {
 			date: new Date(2026, 1, 16),
 			endDate: new Date(2026, 1, 20),
 			label: "Secret Holiday",
-			emoji: "🧣",
+			emoji: "🤫",
 			color: "gold",
 			description: "Until 20 Feb",
 		},

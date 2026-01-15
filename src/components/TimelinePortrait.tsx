@@ -214,11 +214,21 @@ function layoutPortraitMilestones(
 	}));
 }
 
+type GanttBarPortrait = GanttBarBase & {
+	labelLeftPx: number;
+	labelExpanded: boolean;
+};
+
 function computeGanttBars(
 	rangeMilestoneLookup: RangeMilestoneLookup,
 	totalDays: number,
-): GanttBarBase[] {
+	containerHeight: number,
+	maxWidth: number,
+): GanttBarPortrait[] {
 	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+	const MILESTONE_HEIGHT = 24;
+	const EXPANDED_WIDTH = 120;
+	const COLLAPSED_WIDTH = 24;
 
 	const bars: GanttBarBase[] = [];
 	for (const [label, range] of Object.entries(rangeMilestoneLookup)) {
@@ -239,7 +249,34 @@ function computeGanttBars(
 		});
 	}
 
-	return bars.sort((a, b) => a.startPosition - b.startPosition);
+	bars.sort((a, b) => a.startPosition - b.startPosition);
+
+	// Use collapsing algorithm for labels
+	// Labels have fixed Y position (center of range), stack horizontally when overlapping
+	const labelInputs = bars.map((bar) => {
+		const centerPosition = (bar.startPosition + bar.endPosition) / 2;
+		const topPx = (centerPosition / 100) * containerHeight;
+		return {
+			...bar,
+			barWidth: bar.width, // preserve original bar width
+			top: topPx - MILESTONE_HEIGHT / 2,
+			height: MILESTONE_HEIGHT,
+			isColoured: !!bar.color,
+		};
+	});
+
+	const { layouts } = layoutMilestonesCore(labelInputs, {
+		maxWidth,
+		expandedWidth: EXPANDED_WIDTH,
+		collapsedWidth: COLLAPSED_WIDTH,
+	});
+
+	return layouts.map((layout) => ({
+		...layout,
+		width: layout.barWidth, // restore original bar width
+		labelLeftPx: layout.left,
+		labelExpanded: !layout.collapsed,
+	}));
 }
 
 // ============================================================================
@@ -309,10 +346,13 @@ export function TimelinePortrait({
 		});
 	}, [baseMilestones, availableWidth, containerHeight]);
 
+	// Max width for gantt labels (limited space on left side)
+	const maxGanttLabelWidth = Math.floor(windowSize.width * 0.25);
+
 	// Compute gantt bars
 	const ganttBars = useMemo(() => {
-		return computeGanttBars(rangeMilestoneLookup, totalDays);
-	}, [rangeMilestoneLookup, totalDays]);
+		return computeGanttBars(rangeMilestoneLookup, totalDays, containerHeight, maxGanttLabelWidth);
+	}, [rangeMilestoneLookup, totalDays, containerHeight, maxGanttLabelWidth]);
 
 	const handleLineMouseMove = useCallback(
 		(e: MouseEvent) => {
@@ -373,26 +413,47 @@ export function TimelinePortrait({
 						{/* Labels with stems */}
 						{ganttBars.map((bar) => {
 							const centerPosition = (bar.startPosition + bar.endPosition) / 2;
+							// Stem width extends based on label horizontal offset
+							const stemWidth = 16 + bar.labelLeftPx;
 							return (
 								<div
 									key={`label-${bar.label}`}
-									class={`timeline-gantt-item-portrait ${bar.color ? `colored color-${bar.color}` : ""}`}
+									class={`timeline-gantt-item-portrait ${bar.color ? `colored color-${bar.color}` : ""} ${bar.labelExpanded ? "expanded" : "collapsed"}`}
 									style={{
 										top: `${centerPosition}%`,
 										...(bar.color
 											? { "--bar-color": `var(--color-${bar.color})` }
 											: {}),
 									}}
-									onClick={(e) => {
-										const day = days[bar.startIndex];
-										if (day) onDayClick(e as unknown as MouseEvent, day);
-									}}
 								>
-									<div class="timeline-gantt-label-portrait timeline-label">
-										<span class="timeline-gantt-label-emoji">{bar.emoji}</span>
-										<span class="timeline-gantt-label-text">{bar.label}</span>
-									</div>
-									<div class="timeline-gantt-stem-portrait" />
+									{bar.labelExpanded ? (
+										<div
+											class="timeline-gantt-label-portrait timeline-label"
+											style={{ marginRight: `${bar.labelLeftPx}px` }}
+											onClick={(e) => {
+												const day = days[bar.startIndex];
+												if (day) onDayClick(e as unknown as MouseEvent, day);
+											}}
+										>
+											<span class="timeline-gantt-label-emoji">{bar.emoji}</span>
+											<span class="timeline-gantt-label-text">{bar.label}</span>
+										</div>
+									) : (
+										<div
+											class="timeline-gantt-emoji-only-portrait"
+											style={{ marginRight: `${bar.labelLeftPx}px` }}
+											onClick={(e) => {
+												const day = days[bar.startIndex];
+												if (day) onDayClick(e as unknown as MouseEvent, day);
+											}}
+										>
+											<span class="timeline-gantt-label-emoji">{bar.emoji}</span>
+										</div>
+									)}
+									<div
+										class="timeline-gantt-stem-portrait"
+										style={{ width: `${stemWidth}px` }}
+									/>
 								</div>
 							);
 						})}
