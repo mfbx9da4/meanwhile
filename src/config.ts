@@ -53,7 +53,7 @@ export const CONFIG = {
 			date: new Date(2026, 0, 23),
 			label: "Blood Tests",
 			emoji: "🩸",
-			color: "subtle",
+			color: "salmon",
 			description:
 				"10 week blood tests which should reveal gender and any adverse genetic issues at The Fetal Medicine Centre",
 		},
