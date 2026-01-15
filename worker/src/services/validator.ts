@@ -1,87 +1,70 @@
-type ConfigJSON = {
-	startDate: string;
-	dueDate: string;
-	todayEmoji: string;
-	milestones: Array<{
-		date: string;
-		endDate?: string;
-		label: string;
-		emoji: string;
-		color?: string;
-		description?: string;
-	}>;
-};
+import { z } from "@hono/zod-openapi";
+
+// ISO date format: YYYY-MM-DD
+const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD format");
+
+// Milestone schema
+const milestoneSchema = z.object({
+	date: isoDateSchema,
+	endDate: isoDateSchema.optional(),
+	label: z.string().min(1, "Label is required"),
+	emoji: z.string().min(1, "Emoji is required"),
+	color: z.string().optional(),
+	description: z.string().optional(),
+});
+
+// Full config schema
+const configSchema = z.object({
+	startDate: isoDateSchema,
+	dueDate: isoDateSchema,
+	todayEmoji: z.string().min(1, "todayEmoji is required"),
+	milestones: z.array(milestoneSchema),
+});
+
+export type ConfigJSON = z.infer<typeof configSchema>;
 
 type ValidationResult = {
 	valid: boolean;
 	error?: string;
 };
 
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
 export function validateConfig(configString: string): ValidationResult {
 	// Try to parse as JSON
-	let config: ConfigJSON;
+	let parsed: unknown;
 	try {
-		config = JSON.parse(configString);
-	} catch (e) {
+		parsed = JSON.parse(configString);
+	} catch {
 		return { valid: false, error: "Invalid JSON syntax" };
 	}
 
-	// Check required fields
-	if (!config.startDate) {
-		return { valid: false, error: "Missing startDate" };
-	}
-	if (!config.dueDate) {
-		return { valid: false, error: "Missing dueDate" };
-	}
-	if (!config.todayEmoji) {
-		return { valid: false, error: "Missing todayEmoji" };
-	}
-	if (!Array.isArray(config.milestones)) {
-		return { valid: false, error: "milestones must be an array" };
-	}
+	// Validate with zod
+	const result = configSchema.safeParse(parsed);
 
-	// Validate date formats
-	if (!ISO_DATE_REGEX.test(config.startDate)) {
+	if (!result.success) {
+		// Format the first error nicely
+		const issue = result.error.issues[0];
+		const path = issue.path.join(".");
+
+		// Make milestone errors more readable
+		if (path.startsWith("milestones.")) {
+			const match = path.match(/^milestones\.(\d+)\.(.+)$/);
+			if (match) {
+				const [, index, field] = match;
+				return {
+					valid: false,
+					error: `Milestone ${Number(index) + 1} ${field}: ${issue.message}`,
+				};
+			}
+		}
+
 		return {
 			valid: false,
-			error: `Invalid startDate format: ${config.startDate}. Expected YYYY-MM-DD`,
+			error: path ? `${path}: ${issue.message}` : issue.message,
 		};
-	}
-	if (!ISO_DATE_REGEX.test(config.dueDate)) {
-		return {
-			valid: false,
-			error: `Invalid dueDate format: ${config.dueDate}. Expected YYYY-MM-DD`,
-		};
-	}
-
-	// Validate each milestone
-	for (let i = 0; i < config.milestones.length; i++) {
-		const m = config.milestones[i];
-
-		if (!m.date) {
-			return { valid: false, error: `Milestone ${i + 1} missing date` };
-		}
-		if (!ISO_DATE_REGEX.test(m.date)) {
-			return {
-				valid: false,
-				error: `Milestone ${i + 1} invalid date format: ${m.date}`,
-			};
-		}
-		if (m.endDate && !ISO_DATE_REGEX.test(m.endDate)) {
-			return {
-				valid: false,
-				error: `Milestone ${i + 1} invalid endDate format: ${m.endDate}`,
-			};
-		}
-		if (!m.label) {
-			return { valid: false, error: `Milestone ${i + 1} missing label` };
-		}
-		if (!m.emoji) {
-			return { valid: false, error: `Milestone ${i + 1} missing emoji` };
-		}
 	}
 
 	return { valid: true };
 }
+
+// Export schema for potential reuse
+export { configSchema, milestoneSchema };

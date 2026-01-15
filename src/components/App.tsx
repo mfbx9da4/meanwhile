@@ -396,6 +396,7 @@ export function App() {
 				totalDays={totalDays}
 				daysPassed={daysPassed}
 				onToggleView={toggleViewMode}
+				onOpenConfigEditor={() => setShowConfigEditor(true)}
 			/>
 			{tooltip && (
 				<Tooltip
