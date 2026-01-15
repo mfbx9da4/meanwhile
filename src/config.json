@@ -91,6 +91,12 @@
 		},
 		{
 			"date": "2026-03-15",
+			"label": "Test Event",
+			"emoji": "🧪",
+			"color": "subtle"
+		},
+		{
+			"date": "2026-03-15",
 			"endDate": "2026-03-20",
 			"label": "Madrid Offsite",
 			"emoji": "🇪🇸",
