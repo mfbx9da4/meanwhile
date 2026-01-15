@@ -168,13 +168,13 @@ type PortraitMilestoneWithLayout = DayInfo & {
 };
 
 // Internal types for the layout algorithm
-type MilestoneLayoutInput = {
+type LayoutInput = {
 	top: number;
 	height: number;
 	isColoured: boolean;
 };
 
-type MilestoneLayout = MilestoneLayoutInput & {
+type LayoutOutput = {
 	left: number;
 	width: number;
 	collapsed: boolean;
@@ -186,15 +186,15 @@ type LayoutOptions = {
 	collapsedWidth?: number;
 };
 
-function overlapsY(a: MilestoneLayoutInput, b: MilestoneLayoutInput): boolean {
+function overlapsY(a: LayoutInput, b: LayoutInput): boolean {
 	// vertical intervals [top, top+height) intersect?
 	return !(a.top + a.height <= b.top || b.top + b.height <= a.top);
 }
 
-function layoutMilestonesCore(
-	unsortedMilestones: MilestoneLayoutInput[],
+function layoutMilestonesCore<T extends LayoutInput>(
+	unsortedMilestones: T[],
 	opts: LayoutOptions,
-): { layouts: MilestoneLayout[]; ok: boolean } {
+): { layouts: (T & LayoutOutput)[]; ok: boolean } {
 	const expandedWidth = opts.expandedWidth ?? 120;
 	const collapsedWidth = opts.collapsedWidth ?? 24;
 	const maxWidth = opts.maxWidth;
@@ -204,7 +204,7 @@ function layoutMilestonesCore(
 	}
 
 	// Sort by top; build mutable layout objects
-	const layouts: MilestoneLayout[] = [...unsortedMilestones]
+	const layouts: (T & LayoutOutput)[] = [...unsortedMilestones]
 		.sort((a, b) => a.top - b.top)
 		.map((ms) => ({
 			...ms,
@@ -262,7 +262,7 @@ function layoutMilestonesCore(
 
 		// Find the candidate to collapse: prioritize collapsing dependencies (Y-overlapping
 		// milestones to the left) of the rightmost milestone, starting with the innermost.
-		const findCandidate = (): MilestoneLayout | null => {
+		const findCandidate = (): (T & LayoutOutput) | null => {
 			const expanded = layouts.filter((ms) => !ms.collapsed);
 			if (expanded.length === 0) return null;
 
@@ -272,7 +272,7 @@ function layoutMilestonesCore(
 			);
 
 			// Find all Y-overlapping expanded milestones (only expanded can be collapsed)
-			const candidates = new Set<MilestoneLayout>();
+			const candidates = new Set<T & LayoutOutput>();
 			for (const ms of atMaxRight) {
 				for (const other of expanded) {
 					if (overlapsY(ms, other)) {
@@ -288,7 +288,7 @@ function layoutMilestonesCore(
 			const nonColoured = arr.filter((ms) => !ms.isColoured);
 			const coloured = arr.filter((ms) => ms.isColoured);
 
-			const findLeftmost = (list: MilestoneLayout[]): MilestoneLayout => {
+			const findLeftmost = (list: (T & LayoutOutput)[]): T & LayoutOutput => {
 				let best = list[0];
 				for (const ms of list) {
 					if (ms.left < best.left) best = ms;
@@ -332,36 +332,24 @@ function layoutTimelineMilestones(
 
 	// Convert input milestones to the core algorithm's format
 	// position is percentage (0-100), convert to pixel top
-	const inputLayouts: (MilestoneLayoutInput & {
-		original: DayInfo & { position: number };
-	})[] = milestones.map((m) => ({
+	const inputLayouts = milestones.map((m) => ({
+		...m,
 		top: (m.position / 100) * containerHeight - MILESTONE_HEIGHT / 2,
 		height: MILESTONE_HEIGHT,
-		isColoured: false, // Can be extended to check for special milestones
-		original: m,
+		isColoured: !!m.color,
 	}));
 
-	// Run the core layout algorithm
-	const { layouts } = layoutMilestonesCore(
-		inputLayouts.map(({ top, height, isColoured }) => ({
-			top,
-			height,
-			isColoured,
-		})),
-		{
-			maxWidth: availableWidth - STEM_BASE_WIDTH,
-			expandedWidth: EXPANDED_WIDTH,
-			collapsedWidth: COLLAPSED_WIDTH,
-		},
-	);
+	// Run the core layout algorithm (generic preserves all input properties)
+	const { layouts } = layoutMilestonesCore(inputLayouts, {
+		maxWidth: availableWidth - STEM_BASE_WIDTH,
+		expandedWidth: EXPANDED_WIDTH,
+		collapsedWidth: COLLAPSED_WIDTH,
+	});
 
-	// Sort inputLayouts by top to match layouts order (core algorithm sorts by top)
-	const sortedInputs = [...inputLayouts].sort((a, b) => a.top - b.top);
-
-	// Convert back to the output format
-	return layouts.map((layout, i) => ({
-		...sortedInputs[i].original,
-		topPx: (sortedInputs[i].original.position / 100) * containerHeight,
+	// Convert to the output format
+	return layouts.map((layout) => ({
+		...layout,
+		topPx: (layout.position / 100) * containerHeight,
 		leftPx: layout.left,
 		expanded: !layout.collapsed,
 	}));
