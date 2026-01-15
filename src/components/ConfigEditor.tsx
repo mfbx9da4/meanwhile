@@ -144,7 +144,7 @@ export function ConfigEditor({ onClose }: Props) {
 									Tell me what to change in the config.
 									<br />
 									<span class="example">
-										e.g., "Add my birthday on March 15"
+										e.g., "Add my birthday on March 16"
 									</span>
 								</div>
 							)}
