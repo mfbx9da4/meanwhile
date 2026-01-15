@@ -1,0 +1,6 @@
+# Copy this to .dev.vars and fill in the values
+# Get these from Cloudflare dashboard or use `npm run pull-secrets`
+
+PIN=1234
+MISTRAL_API_KEY=your_mistral_api_key
+GITHUB_TOKEN=your_github_token
