@@ -1,6 +1,13 @@
-import { useRef, useState, useCallback } from "preact/hooks";
+import { useRef, useState, useCallback, useMemo } from "preact/hooks";
 import type { DayInfo } from "../types";
 import { highlightedDays } from "./App";
+import type {
+	MonthMarker,
+	WeekMarker,
+	RangeMilestoneLookup,
+	BaseMilestone,
+	GanttBarBase,
+} from "./timelineTypes";
 
 // Milestones that get view transitions
 const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
@@ -9,42 +16,199 @@ const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
 const ROW_HEIGHT = 42; // vertical spacing between rows
 const GANTT_ROW_HEIGHT = 24; // height of gantt bar rows
 const GANTT_BAR_HEIGHT = 18; // height of individual gantt bars
+const MILESTONE_PADDING = 20; // horizontal padding inside milestone
+const MILESTONE_GAP = 8; // minimum gap between milestones
+const EMOJI_WIDTH = 18; // approximate emoji width
 
-type MilestoneWithLayout = DayInfo & {
-	position: number;
+// ============================================================================
+// LAYOUT TYPES
+// ============================================================================
+
+type MilestoneWithLayout = BaseMilestone & {
 	row: number;
 	width: number;
 };
 
-type GanttBar = {
-	label: string;
-	startPosition: number;
-	endPosition: number;
-	width: number;
-	color?: string;
-	emoji: string;
+type GanttBarLandscape = GanttBarBase & {
 	barRow: number;
 	labelRow: number;
-	labelWidth: number;
-	startIndex: number;
-	endIndex: number;
 };
 
-type MonthMarker = {
-	month: string;
-	year: number;
-	position: number;
-};
+// ============================================================================
+// LAYOUT FUNCTIONS
+// ============================================================================
 
-type WeekMarker = {
-	week: number;
-	position: number;
-};
+function measureTextWidth(text: string, font: string): number {
+	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return text.length * 7; // fallback
+	ctx.font = font;
+	return ctx.measureText(text).width;
+}
+
+function assignRows(
+	milestones: BaseMilestone[],
+	containerWidth: number,
+	annotationEmojis: Record<string, string>,
+): MilestoneWithLayout[] {
+	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+
+	// Calculate width for each milestone
+	const withWidths = milestones.map((m) => {
+		const hasEmoji = !!annotationEmojis[m.annotation];
+		const textWidth = measureTextWidth(m.annotation, font);
+		const width = textWidth + MILESTONE_PADDING + (hasEmoji ? EMOJI_WIDTH : 0);
+		return { ...m, width };
+	});
+
+	// Sort by position (left to right)
+	const sorted = [...withWidths].sort((a, b) => a.position - b.position);
+
+	// Track occupied ranges per row
+	const rowOccupancy = new Map<number, Array<{ left: number; right: number }>>();
+	const result: MilestoneWithLayout[] = [];
+
+	for (const milestone of sorted) {
+		const centerPx = (milestone.position / 100) * containerWidth;
+		const leftPx = centerPx - milestone.width / 2;
+		const rightPx = centerPx + milestone.width / 2;
+
+		let assignedRow = 0;
+		const maxSearch = 10;
+
+		for (let distance = 0; distance < maxSearch; distance++) {
+			const rowsToTry = distance === 0 ? [0] : [distance, -distance];
+
+			for (const row of rowsToTry) {
+				const occupied = rowOccupancy.get(row) || [];
+				const hasConflict = occupied.some(
+					(range) =>
+						!(
+							rightPx + MILESTONE_GAP < range.left ||
+							leftPx - MILESTONE_GAP > range.right
+						),
+				);
+
+				if (!hasConflict) {
+					assignedRow = row;
+					break;
+				}
+			}
+
+			const occupied = rowOccupancy.get(assignedRow) || [];
+			const hasConflict = occupied.some(
+				(range) =>
+					!(
+						rightPx + MILESTONE_GAP < range.left ||
+						leftPx - MILESTONE_GAP > range.right
+					),
+			);
+			if (!hasConflict) break;
+		}
+
+		const occupied = rowOccupancy.get(assignedRow) || [];
+		occupied.push({ left: leftPx, right: rightPx });
+		rowOccupancy.set(assignedRow, occupied);
+
+		result.push({ ...milestone, row: assignedRow });
+	}
+
+	return result;
+}
+
+function computeGanttBars(
+	rangeMilestoneLookup: RangeMilestoneLookup,
+	totalDays: number,
+	containerWidth: number,
+): GanttBarLandscape[] {
+	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+
+	const bars: Omit<GanttBarLandscape, "barRow" | "labelRow">[] = [];
+	for (const [label, range] of Object.entries(rangeMilestoneLookup)) {
+		const startPosition = (range.startIndex / totalDays) * 100;
+		const endPosition = (range.endIndex / totalDays) * 100;
+		const textWidth = measureTextWidth(label, font);
+		const labelWidth = textWidth + MILESTONE_PADDING + EMOJI_WIDTH;
+		bars.push({
+			label,
+			startPosition,
+			endPosition,
+			width: endPosition - startPosition,
+			color: range.color,
+			emoji: range.emoji,
+			labelWidth,
+			startIndex: range.startIndex,
+			endIndex: range.endIndex,
+		});
+	}
+
+	bars.sort((a, b) => a.startPosition - b.startPosition);
+
+	const barRowOccupancy: Array<{ left: number; right: number }>[] = [];
+	const labelRowOccupancy: Array<{ left: number; right: number }>[] = [];
+
+	const result: GanttBarLandscape[] = [];
+	for (const bar of bars) {
+		const barLeftPx = (bar.startPosition / 100) * containerWidth;
+		const barRightPx = (bar.endPosition / 100) * containerWidth;
+
+		let assignedBarRow = 0;
+		for (let row = 0; row < barRowOccupancy.length + 1; row++) {
+			const occupied = barRowOccupancy[row] || [];
+			const hasConflict = occupied.some(
+				(range) =>
+					!(barRightPx + 4 < range.left || barLeftPx - 4 > range.right),
+			);
+			if (!hasConflict) {
+				assignedBarRow = row;
+				break;
+			}
+		}
+
+		if (!barRowOccupancy[assignedBarRow]) barRowOccupancy[assignedBarRow] = [];
+		barRowOccupancy[assignedBarRow].push({ left: barLeftPx, right: barRightPx });
+
+		const labelCenterPx = (barLeftPx + barRightPx) / 2;
+		const labelLeftPx = labelCenterPx - bar.labelWidth / 2;
+		const labelRightPx = labelCenterPx + bar.labelWidth / 2;
+
+		let assignedLabelRow = 0;
+		for (let row = 0; row < labelRowOccupancy.length + 1; row++) {
+			const occupied = labelRowOccupancy[row] || [];
+			const hasConflict = occupied.some(
+				(range) =>
+					!(
+						labelRightPx + MILESTONE_GAP < range.left ||
+						labelLeftPx - MILESTONE_GAP > range.right
+					),
+			);
+			if (!hasConflict) {
+				assignedLabelRow = row;
+				break;
+			}
+		}
+
+		if (!labelRowOccupancy[assignedLabelRow])
+			labelRowOccupancy[assignedLabelRow] = [];
+		labelRowOccupancy[assignedLabelRow].push({
+			left: labelLeftPx,
+			right: labelRightPx,
+		});
+
+		result.push({ ...bar, barRow: assignedBarRow, labelRow: assignedLabelRow });
+	}
+
+	return result;
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 type TimelineLandscapeProps = {
 	days: DayInfo[];
-	milestones: MilestoneWithLayout[];
-	ganttBars: GanttBar[];
+	baseMilestones: BaseMilestone[];
+	rangeMilestoneLookup: RangeMilestoneLookup;
 	monthMarkers: MonthMarker[];
 	weekMarkers: WeekMarker[];
 	todayIndex: number;
@@ -53,17 +217,13 @@ type TimelineLandscapeProps = {
 	selectedDayIndex: number | null;
 	annotationEmojis: Record<string, string>;
 	onDayClick: (e: MouseEvent, day: DayInfo) => void;
-	milestonesHeight: number;
-	minRow: number;
-	maxRow: number;
-	ganttBarRowCount: number;
-	ganttLabelRowCount: number;
+	windowWidth: number;
 };
 
 export function TimelineLandscape({
 	days,
-	milestones,
-	ganttBars,
+	baseMilestones,
+	rangeMilestoneLookup,
 	monthMarkers,
 	weekMarkers,
 	todayIndex,
@@ -72,15 +232,51 @@ export function TimelineLandscape({
 	selectedDayIndex,
 	annotationEmojis,
 	onDayClick,
-	milestonesHeight,
-	minRow,
-	maxRow,
-	ganttBarRowCount,
-	ganttLabelRowCount,
+	windowWidth,
 }: TimelineLandscapeProps) {
 	const lineRef = useRef<HTMLDivElement>(null);
 	const [hoverPosition, setHoverPosition] = useState<number | null>(null);
 	const [hoverDayIndex, setHoverDayIndex] = useState<number | null>(null);
+
+	const containerWidth = windowWidth - 120;
+
+	// Compute milestone layouts
+	const milestones = useMemo(() => {
+		return assignRows(baseMilestones, containerWidth, annotationEmojis);
+	}, [baseMilestones, containerWidth, annotationEmojis]);
+
+	// Compute row range for dynamic height
+	const { minRow, maxRow, milestonesHeight } = useMemo(() => {
+		if (milestones.length === 0) {
+			return { minRow: 0, maxRow: 0, milestonesHeight: ROW_HEIGHT };
+		}
+		const rows = milestones.map((m) => m.row);
+		const min = Math.min(...rows);
+		const max = Math.max(...rows);
+		const aboveRows = max + 1;
+		const belowRows = Math.abs(min);
+		return {
+			minRow: min,
+			maxRow: max,
+			milestonesHeight: (aboveRows + belowRows) * ROW_HEIGHT,
+		};
+	}, [milestones]);
+
+	// Compute gantt bars
+	const ganttBars = useMemo(() => {
+		return computeGanttBars(rangeMilestoneLookup, totalDays, containerWidth);
+	}, [rangeMilestoneLookup, totalDays, containerWidth]);
+
+	// Compute gantt row counts
+	const { ganttBarRowCount, ganttLabelRowCount } = useMemo(() => {
+		if (ganttBars.length === 0) {
+			return { ganttBarRowCount: 0, ganttLabelRowCount: 0 };
+		}
+		return {
+			ganttBarRowCount: Math.max(...ganttBars.map((b) => b.barRow)) + 1,
+			ganttLabelRowCount: Math.max(...ganttBars.map((b) => b.labelRow)) + 1,
+		};
+	}, [ganttBars]);
 
 	const handleLineMouseMove = useCallback(
 		(e: MouseEvent) => {

@@ -1,44 +1,255 @@
-import { useRef, useState, useCallback } from "preact/hooks";
+import {
+	useRef,
+	useState,
+	useCallback,
+	useMemo,
+	useLayoutEffect,
+} from "preact/hooks";
 import type { DayInfo } from "../types";
+import type {
+	MonthMarker,
+	WeekMarker,
+	RangeMilestoneLookup,
+	BaseMilestone,
+	GanttBarBase,
+} from "./timelineTypes";
 
 // Milestones that get view transitions
 const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
 
 // Portrait milestone layout constants
 const PORTRAIT_MONTHS_WIDTH = 32; // width of months column that stems must cross
+const MILESTONE_PADDING = 20; // horizontal padding inside milestone
+const EMOJI_WIDTH = 18; // approximate emoji width
 
-type PortraitMilestoneWithLayout = DayInfo & {
+// ============================================================================
+// LAYOUT TYPES
+// ============================================================================
+
+type PortraitMilestoneWithLayout = BaseMilestone & {
 	topPx: number;
 	leftPx: number;
 	expanded: boolean;
 };
 
-type GanttBar = {
-	label: string;
-	startPosition: number;
-	endPosition: number;
+type LayoutInput = {
+	top: number;
+	height: number;
+	isColoured: boolean;
+};
+
+type LayoutOutput = {
+	left: number;
 	width: number;
-	color?: string;
-	emoji: string;
-	startIndex: number;
-	endIndex: number;
+	collapsed: boolean;
 };
 
-type MonthMarker = {
-	month: string;
-	year: number;
-	position: number;
+type LayoutOptions = {
+	maxWidth: number;
+	expandedWidth?: number;
+	collapsedWidth?: number;
 };
 
-type WeekMarker = {
-	week: number;
-	position: number;
-};
+// ============================================================================
+// LAYOUT FUNCTIONS
+// ============================================================================
+
+function measureTextWidth(text: string, font: string): number {
+	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return text.length * 7; // fallback
+	ctx.font = font;
+	return ctx.measureText(text).width;
+}
+
+function overlapsY(a: LayoutInput, b: LayoutInput): boolean {
+	return !(a.top + a.height <= b.top || b.top + b.height <= a.top);
+}
+
+function layoutMilestonesCore<T extends LayoutInput>(
+	unsortedMilestones: T[],
+	opts: LayoutOptions,
+): { layouts: (T & LayoutOutput)[]; ok: boolean } {
+	const expandedWidth = opts.expandedWidth ?? 120;
+	const collapsedWidth = opts.collapsedWidth ?? 24;
+	const maxWidth = opts.maxWidth;
+
+	if (collapsedWidth > maxWidth) {
+		throw new Error("collapsedWidth cannot exceed maxWidth");
+	}
+
+	const layouts: (T & LayoutOutput)[] = [...unsortedMilestones]
+		.sort((a, b) => a.top - b.top)
+		.map((ms) => ({
+			...ms,
+			left: 0,
+			width: expandedWidth,
+			collapsed: false,
+		}));
+
+	const n = layouts.length;
+
+	const runPass = () => {
+		let maxRight = 0;
+
+		for (let i = 0; i < n; i++) {
+			const base = layouts[i];
+			const w = base.width;
+
+			const others: { start: number; end: number }[] = [];
+
+			for (let j = 0; j < i; j++) {
+				const other = layouts[j];
+				if (overlapsY(base, other)) {
+					others.push({
+						start: other.left,
+						end: other.left + other.width,
+					});
+				}
+			}
+
+			others.sort((a, b) => a.start - b.start);
+
+			let x = 0;
+			for (const { start, end } of others) {
+				if (x + w <= start) break;
+				if (x < end) x = end;
+			}
+
+			base.left = x;
+			const right = x + w;
+			if (right > maxRight) maxRight = right;
+		}
+
+		return maxRight;
+	};
+
+	for (let iter = 0; iter < n + 2; iter++) {
+		const maxRight = runPass();
+
+		if (maxRight <= maxWidth) {
+			return { layouts, ok: true };
+		}
+
+		const findCandidate = (): (T & LayoutOutput) | null => {
+			const expanded = layouts.filter((ms) => !ms.collapsed);
+			if (expanded.length === 0) return null;
+
+			const atMaxRight = layouts.filter(
+				(ms) => ms.left + ms.width === maxRight,
+			);
+
+			const candidates = new Set<T & LayoutOutput>();
+			for (const ms of atMaxRight) {
+				for (const other of expanded) {
+					if (overlapsY(ms, other)) {
+						candidates.add(other);
+					}
+				}
+			}
+
+			if (candidates.size === 0) return null;
+
+			const arr = Array.from(candidates);
+			const nonColoured = arr.filter((ms) => !ms.isColoured);
+			const coloured = arr.filter((ms) => ms.isColoured);
+
+			const findLeftmost = (list: (T & LayoutOutput)[]): T & LayoutOutput => {
+				let best = list[0];
+				for (const ms of list) {
+					if (ms.left < best.left) best = ms;
+				}
+				return best;
+			};
+
+			if (nonColoured.length > 0) return findLeftmost(nonColoured);
+			if (coloured.length > 0) return findLeftmost(coloured);
+			return arr[0];
+		};
+
+		const candidate = findCandidate();
+		if (!candidate) {
+			return { layouts, ok: false };
+		}
+
+		candidate.collapsed = true;
+		candidate.width = collapsedWidth;
+	}
+
+	return { layouts, ok: false };
+}
+
+function layoutPortraitMilestones(
+	milestones: BaseMilestone[],
+	availableDimensions: { width: number; height: number },
+): PortraitMilestoneWithLayout[] {
+	const { width: availableWidth, height: containerHeight } =
+		availableDimensions;
+	if (milestones.length === 0 || availableWidth <= 0 || containerHeight <= 0)
+		return [];
+
+	const MILESTONE_HEIGHT = 24;
+	const STEM_BASE_WIDTH = 48;
+	const EXPANDED_WIDTH = 120;
+	const COLLAPSED_WIDTH = 24;
+
+	const inputLayouts = milestones.map((m) => ({
+		...m,
+		top: (m.position / 100) * containerHeight - MILESTONE_HEIGHT / 2,
+		height: MILESTONE_HEIGHT,
+		isColoured: !!m.color,
+	}));
+
+	const { layouts } = layoutMilestonesCore(inputLayouts, {
+		maxWidth: availableWidth - STEM_BASE_WIDTH,
+		expandedWidth: EXPANDED_WIDTH,
+		collapsedWidth: COLLAPSED_WIDTH,
+	});
+
+	return layouts.map((layout) => ({
+		...layout,
+		topPx: (layout.position / 100) * containerHeight,
+		leftPx: layout.left,
+		expanded: !layout.collapsed,
+	}));
+}
+
+function computeGanttBars(
+	rangeMilestoneLookup: RangeMilestoneLookup,
+	totalDays: number,
+): GanttBarBase[] {
+	const font = "600 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+
+	const bars: GanttBarBase[] = [];
+	for (const [label, range] of Object.entries(rangeMilestoneLookup)) {
+		const startPosition = (range.startIndex / totalDays) * 100;
+		const endPosition = (range.endIndex / totalDays) * 100;
+		const textWidth = measureTextWidth(label, font);
+		const labelWidth = textWidth + MILESTONE_PADDING + EMOJI_WIDTH;
+		bars.push({
+			label,
+			startPosition,
+			endPosition,
+			width: endPosition - startPosition,
+			color: range.color,
+			emoji: range.emoji,
+			labelWidth,
+			startIndex: range.startIndex,
+			endIndex: range.endIndex,
+		});
+	}
+
+	return bars.sort((a, b) => a.startPosition - b.startPosition);
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 type TimelinePortraitProps = {
 	days: DayInfo[];
-	milestones: PortraitMilestoneWithLayout[];
-	ganttBars: GanttBar[];
+	baseMilestones: BaseMilestone[];
+	rangeMilestoneLookup: RangeMilestoneLookup;
 	monthMarkers: MonthMarker[];
 	weekMarkers: WeekMarker[];
 	todayIndex: number;
@@ -47,13 +258,13 @@ type TimelinePortraitProps = {
 	selectedDayIndex: number | null;
 	annotationEmojis: Record<string, string>;
 	onDayClick: (e: MouseEvent, day: DayInfo) => void;
-	milestonesContainerRef?: { current: HTMLDivElement | null };
+	windowSize: { width: number; height: number };
 };
 
 export function TimelinePortrait({
 	days,
-	milestones,
-	ganttBars,
+	baseMilestones,
+	rangeMilestoneLookup,
 	monthMarkers,
 	weekMarkers,
 	todayIndex,
@@ -62,11 +273,46 @@ export function TimelinePortrait({
 	selectedDayIndex,
 	annotationEmojis,
 	onDayClick,
-	milestonesContainerRef,
+	windowSize,
 }: TimelinePortraitProps) {
 	const lineRef = useRef<HTMLDivElement>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
 	const [hoverPosition, setHoverPosition] = useState<number | null>(null);
 	const [hoverDayIndex, setHoverDayIndex] = useState<number | null>(null);
+
+	// Measure the milestones container position from the DOM
+	const [portraitLayout, setPortraitLayout] = useState<{
+		width: number;
+		height: number;
+	} | null>(null);
+
+	useLayoutEffect(() => {
+		if (containerRef.current) {
+			const rect = containerRef.current.getBoundingClientRect();
+			setPortraitLayout({
+				width: Math.floor(windowSize.width - rect.left - 10),
+				height: Math.floor(rect.height),
+			});
+		}
+	}, [windowSize.width, windowSize.height]);
+
+	const availableWidth =
+		portraitLayout?.width ?? Math.floor(windowSize.width * 0.35);
+	const containerHeight =
+		portraitLayout?.height ?? Math.floor(windowSize.height * 0.85);
+
+	// Compute milestone layouts
+	const milestones = useMemo(() => {
+		return layoutPortraitMilestones(baseMilestones, {
+			width: availableWidth,
+			height: containerHeight,
+		});
+	}, [baseMilestones, availableWidth, containerHeight]);
+
+	// Compute gantt bars
+	const ganttBars = useMemo(() => {
+		return computeGanttBars(rangeMilestoneLookup, totalDays);
+	}, [rangeMilestoneLookup, totalDays]);
 
 	const handleLineMouseMove = useCallback(
 		(e: MouseEvent) => {
@@ -210,7 +456,7 @@ export function TimelinePortrait({
 				</div>
 
 				{/* Milestones on the right - stems layer (behind) then labels layer (in front) */}
-				<div class="timeline-milestones-portrait" ref={milestonesContainerRef}>
+				<div class="timeline-milestones-portrait" ref={containerRef}>
 					{/* Stems layer - rendered first, appears behind */}
 					{milestones.map((m) => {
 						const contentOffset = m.leftPx;
