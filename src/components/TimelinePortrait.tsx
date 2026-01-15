@@ -347,7 +347,7 @@ export function TimelinePortrait({
 	}, [baseMilestones, availableWidth, containerHeight]);
 
 	// Max width for gantt labels (limited space on left side)
-	const maxGanttLabelWidth = Math.floor(windowSize.width * 0.25);
+	const maxGanttLabelWidth = Math.floor(windowSize.width * 0.4);
 
 	// Compute gantt bars
 	const ganttBars = useMemo(() => {
