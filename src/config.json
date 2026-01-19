@@ -51,8 +51,15 @@
 		},
 		{
 			"date": "2026-01-20",
+			"label": "First Midwife Appointment",
+			"emoji": "🤱",
+			"color": "salmon"
+		},
+		{
+			"date": "2026-01-20",
 			"label": "Paris Business Trip",
-			"emoji": "🗼"
+			"emoji": "🗼",
+			"color": "subtle"
 		},
 		{
 			"date": "2026-01-23",
