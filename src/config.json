@@ -82,6 +82,13 @@
 			"color": "salmon"
 		},
 		{
+			"date": "2026-02-07",
+			"label": "NIPT Bloods",
+			"emoji": "🩸",
+			"color": "salmon",
+			"description": "At Fetal Medicine Center"
+		},
+		{
 			"date": "2026-02-12",
 			"label": "Announce!",
 			"emoji": "📢",
