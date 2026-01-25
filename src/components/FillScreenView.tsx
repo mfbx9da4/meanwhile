@@ -18,9 +18,6 @@ const MONTHS = [
 	"Dec",
 ];
 
-// Milestones that get view transitions
-const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
-
 function formatDate(date: Date): string {
 	return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
@@ -164,11 +161,7 @@ export function FillScreenView({
 					key={day.index}
 					class={`day ${day.passed ? "passed" : "future"} ${day.color ? "milestone" : ""} ${day.isUncoloredMilestone || day.color === "subtle" ? "uncolored-milestone" : ""} ${day.isOddWeek ? "odd-week" : "even-week"} ${day.isToday ? "today" : ""} ${day.annotation ? "has-annotation" : ""} ${selectedDayIndex === day.index ? "selected" : ""} ${highlightedDays.value.indices.has(day.index) ? "highlighted" : ""}`}
 					style={{
-						...(VIEW_TRANSITION_LABELS.has(day.annotation)
-							? { viewTransitionName: `day-${day.index}` }
-							: day.isToday
-								? { viewTransitionName: "today-marker" }
-								: {}),
+						...(day.isToday ? { viewTransitionName: "today-marker" } : {}),
 						...(day.color && day.color !== "subtle"
 							? day.isToday
 								? {

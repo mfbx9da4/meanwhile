@@ -15,9 +15,6 @@ import type {
 	GanttBarBase,
 } from "./timelineTypes";
 
-// Milestones that get view transitions
-const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
-
 // Milestone styling constants
 const ROW_HEIGHT = 42; // vertical spacing between stacked milestones
 const GANTT_ROW_HEIGHT = 24; // height of gantt bar rows
@@ -513,9 +510,6 @@ export function TimelineLandscape({
 					{/* Labels layer - rendered second, appears in front */}
 					{milestones.map((m) => {
 						const stemHeight = BASE_STEM_HEIGHT + m.topPx;
-						const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation)
-							? { viewTransitionName: `day-${m.index}` }
-							: {};
 						return (
 							<div
 								key={`label-${m.index}`}
@@ -537,7 +531,6 @@ export function TimelineLandscape({
 								{m.expanded ? (
 									<div
 										class="timeline-milestone-content-landscape timeline-label"
-										style={viewTransitionStyle}
 										onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
 									>
 										<span class="timeline-milestone-emoji">
@@ -548,7 +541,6 @@ export function TimelineLandscape({
 								) : (
 									<div
 										class="timeline-milestone-emoji-only"
-										style={viewTransitionStyle}
 										onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
 									>
 										<span class="timeline-milestone-emoji">

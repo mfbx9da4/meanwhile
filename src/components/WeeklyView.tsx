@@ -18,9 +18,6 @@ const MONTHS = [
 	"Dec",
 ];
 
-// Milestones that get view transitions
-const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
-
 const DAY_LABELS = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
 const DAY_LABELS_SHORT = ["T", "F", "S", "S", "M", "T", "W"];
 
@@ -205,11 +202,9 @@ export function WeeklyView({
 											key={`${weekIndex}-${dayOfWeek}`}
 											class={`weekly-cell ${day.passed ? "passed" : "future"} ${day.color ? "milestone" : ""} ${day.isUncoloredMilestone || day.color === "subtle" ? "uncolored-milestone" : ""} ${day.isOddWeek ? "odd-week" : "even-week"} ${day.isToday ? "today" : ""} ${selectedDayIndex === day.index ? "selected" : ""} ${highlightedDays.value.indices.has(day.index) ? "highlighted" : ""}`}
 											style={{
-												...(VIEW_TRANSITION_LABELS.has(day.annotation)
-													? { viewTransitionName: `day-${day.index}` }
-													: day.isToday
-														? { viewTransitionName: "today-marker" }
-														: {}),
+												...(day.isToday
+													? { viewTransitionName: "today-marker" }
+													: {}),
 												gridColumn: weekIndex + 1,
 												gridRow: dayOfWeek + 1,
 												...(day.color && day.color !== "subtle"
@@ -303,11 +298,9 @@ export function WeeklyView({
 										key={`${weekIndex}-${dayOfWeek}`}
 										class={`weekly-cell ${day.passed ? "passed" : "future"} ${day.color ? "milestone" : ""} ${day.isUncoloredMilestone || day.color === "subtle" ? "uncolored-milestone" : ""} ${day.isOddWeek ? "odd-week" : "even-week"} ${day.isToday ? "today" : ""} ${selectedDayIndex === day.index ? "selected" : ""} ${highlightedDays.value.indices.has(day.index) ? "highlighted" : ""}`}
 										style={{
-											...(VIEW_TRANSITION_LABELS.has(day.annotation)
-												? { viewTransitionName: `day-${day.index}` }
-												: day.isToday
-													? { viewTransitionName: "today-marker" }
-													: {}),
+											...(day.isToday
+												? { viewTransitionName: "today-marker" }
+												: {}),
 											...(day.color && day.color !== "subtle"
 												? day.isToday
 													? { "--day-target-bg": `var(--color-${day.color})` }

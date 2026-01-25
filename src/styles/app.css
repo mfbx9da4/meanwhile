@@ -914,12 +914,6 @@ body {
 	z-index: 1;
 }
 
-/* View Transitions for trimester milestones */
-::view-transition-old(root),
-::view-transition-new(root) {
-	animation-duration: 0.25s;
-}
-
 /* Timeline View */
 .timeline-view {
 	height: 100%;
@@ -1794,12 +1788,6 @@ body {
 }
 
 /* View transition for landing page to main app */
-::view-transition-old(day-*),
-::view-transition-new(day-*) {
-	animation-duration: 0.4s;
-	animation-timing-function: ease-in-out;
-}
-
 ::view-transition-old(today-marker),
 ::view-transition-new(today-marker) {
 	animation-duration: 0.4s;
