@@ -350,7 +350,7 @@ export function App() {
 
 	const handleLandingEnter = useCallback(() => {
 		localStorage.setItem(LANDING_SEEN_KEY, "true");
-		setViewMode("timeline"); // Use timeline view so Due milestone is visible for transition
+		setViewMode("timeline"); // Use timeline view on entry for consistent layout
 		setShowLanding(false);
 	}, []);
 

@@ -14,9 +14,6 @@ import type {
 	GanttBarBase,
 } from "./timelineTypes";
 
-// Milestones that get view transitions
-const VIEW_TRANSITION_LABELS = new Set(["Start", "Due"]);
-
 // Portrait milestone layout constants
 const PORTRAIT_MONTHS_WIDTH = 32; // width of months column that stems must cross
 const MILESTONE_PADDING = 20; // horizontal padding inside milestone
@@ -547,9 +544,6 @@ export function TimelinePortrait({
 					{/* Labels layer - rendered second, appears in front */}
 					{milestones.map((m) => {
 						const contentOffset = m.leftPx;
-						const viewTransitionStyle = VIEW_TRANSITION_LABELS.has(m.annotation)
-							? { viewTransitionName: `day-${m.index}` }
-							: {};
 						return (
 							<div
 								key={`label-${m.index}`}
@@ -565,7 +559,6 @@ export function TimelinePortrait({
 								{m.expanded ? (
 									<div
 										class="timeline-milestone-content-portrait timeline-label"
-										style={viewTransitionStyle}
 										onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
 									>
 										<span class="timeline-milestone-emoji">
@@ -576,7 +569,6 @@ export function TimelinePortrait({
 								) : (
 									<div
 										class="timeline-milestone-emoji-only"
-										style={viewTransitionStyle}
 										onClick={(e) => onDayClick(e as unknown as MouseEvent, m)}
 									>
 										<span class="timeline-milestone-emoji">
