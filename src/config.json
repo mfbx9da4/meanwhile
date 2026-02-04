@@ -1,10 +1,10 @@
 {
-	"startDate": "2025-11-20",
-	"dueDate": "2026-08-20",
+	"startDate": "2025-11-16",
+	"dueDate": "2026-08-16",
 	"todayEmoji": "📍",
 	"milestones": [
 		{
-			"date": "2025-11-20",
+			"date": "2025-11-16",
 			"label": "Start",
 			"emoji": "🌱",
 			"color": "blue",
@@ -95,7 +95,7 @@
 			"description": "At Fetal Medicine Center"
 		},
 		{
-			"date": "2026-02-12",
+			"date": "2026-02-08",
 			"label": "Announce!",
 			"emoji": "📢",
 			"color": "blue",
@@ -158,21 +158,21 @@
 			"description": "8 - 11 May"
 		},
 		{
-			"date": "2026-05-22",
+			"date": "2026-05-18",
 			"label": "Charlie's Wedding",
 			"emoji": "💒",
 			"color": "pink"
 		},
 		{
-			"date": "2026-05-23",
-			"endDate": "2026-05-31",
+			"date": "2026-05-19",
+			"endDate": "2026-05-27",
 			"label": "May Half Term",
 			"emoji": "🏝️",
 			"color": "subtle",
-			"description": "School resumes 1 June"
+			"description": "School resumes 28 May"
 		},
 		{
-			"date": "2026-05-28",
+			"date": "2026-05-24",
 			"label": "Third Trimester",
 			"emoji": "🤰",
 			"color": "blue",
@@ -197,14 +197,14 @@
 			"color": "pink"
 		},
 		{
-			"date": "2026-08-13",
+			"date": "2026-08-09",
 			"label": "C Section",
 			"emoji": "🥗",
 			"color": "salmon",
 			"description": "Potential scheduled date of Caesarean section birth"
 		},
 		{
-			"date": "2026-08-20",
+			"date": "2026-08-16",
 			"label": "Due",
 			"emoji": "🐣",
 			"color": "red"
