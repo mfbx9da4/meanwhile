@@ -1709,13 +1709,14 @@ body {
 	width: 200px;
 	height: 200px;
 	border-radius: 50%;
-	background: radial-gradient(circle at 35% 35%, #5fb87d 0%, #2d5a3d 60%, #1e3d2a 100%);
+	background: radial-gradient(circle at 35% 35%, rgba(95, 184, 125, 0.95) 0%, rgba(45, 90, 61, 0.97) 60%, rgba(30, 61, 42, 0.98) 100%);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 8px;
 	box-shadow: 0 4px 20px rgba(45, 90, 61, 0.5);
+	backdrop-filter: blur(8px);
 }
 
 .landing-emoji {
@@ -1770,13 +1771,13 @@ body {
 /* Dark mode adjustments for landing page */
 @media (prefers-color-scheme: dark) {
 	.landing-circle {
-		background: radial-gradient(circle at 35% 35%, #7dcea0 0%, #4a9c68 60%, #2d5a3d 100%);
+		background: radial-gradient(circle at 35% 35%, rgba(125, 206, 160, 0.95) 0%, rgba(74, 156, 104, 0.97) 60%, rgba(45, 90, 61, 0.98) 100%);
 		box-shadow: 0 4px 30px rgba(125, 206, 160, 0.5);
 	}
 
 	.landing-text {
-		color: #1a3d2a; /* Dark green text on light green background */
-		text-shadow: none;
+		color: #e8fff0; /* Light mint text on green background */
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 	}
 
 	.landing-button {

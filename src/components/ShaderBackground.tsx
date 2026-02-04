@@ -193,51 +193,51 @@ const fragmentShaderSource = `
     vec3 col;
 
     if (u_darkMode) {
-      // Dark mode: Deep forest womb - dark with bioluminescent green glow
-      vec3 bgDeep = vec3(0.01, 0.03, 0.02);      // Near black with green hint
-      vec3 bgNebula = vec3(0.03, 0.08, 0.05);    // Deep green nebula
-      vec3 warmGlow = vec3(0.2, 0.6, 0.4);       // Forest green life glow
-      vec3 lifeCore = vec3(0.5, 0.9, 0.6);       // Bright mint core
-      vec3 auroraCol = vec3(0.3, 0.8, 0.5);      // Green aurora
-      vec3 particleCol = vec3(0.8, 1.0, 0.85);   // Pale green particles
+      // Dark mode: Deep forest womb - dark with subtle green glow
+      vec3 bgDeep = vec3(0.01, 0.02, 0.015);     // Near black with green hint
+      vec3 bgNebula = vec3(0.02, 0.05, 0.03);    // Deep green nebula
+      vec3 warmGlow = vec3(0.12, 0.35, 0.22);    // Muted forest green glow
+      vec3 lifeCore = vec3(0.25, 0.5, 0.35);     // Subdued mint core
+      vec3 auroraCol = vec3(0.15, 0.4, 0.25);    // Subtle green aurora
+      vec3 particleCol = vec3(0.4, 0.55, 0.45);  // Dim green particles
 
       // Build up the scene
       col = mix(bgDeep, bgNebula, neb);
-      col += warmGlow * organicGlow * 0.8;
-      col = mix(col, lifeCore, organicShape * 0.7);
-      col += auroraCol * aur * 0.4;
-      col += particleCol * parts;
-      col += warmGlow * tend * 0.3;
-      col += vec3(0.05, 0.1, 0.06) * memb;
+      col += warmGlow * organicGlow * 0.6;
+      col = mix(col, lifeCore, organicShape * 0.5);
+      col += auroraCol * aur * 0.3;
+      col += particleCol * parts * 0.7;
+      col += warmGlow * tend * 0.2;
+      col += vec3(0.03, 0.06, 0.04) * memb;
 
       // Vignette - darkness at edges
-      float vig = 1.0 - length(p) * 0.7;
+      float vig = 1.0 - length(p) * 0.8;
       vig = smoothstep(0.0, 1.0, vig);
-      col *= vig * 0.9 + 0.1;
+      col *= vig * 0.85 + 0.1;
 
     } else {
       // Light mode: Fresh spring growth - soft and verdant
-      vec3 bgWarm = vec3(0.95, 0.98, 0.95);      // Soft cream with green tint
-      vec3 bgGreen = vec3(0.90, 0.95, 0.90);     // Pale sage
-      vec3 leafTone = vec3(0.80, 0.92, 0.82);    // Soft leaf green
-      vec3 lifeGlow = vec3(0.55, 0.80, 0.60);    // Fresh green glow
-      vec3 highlight = vec3(0.96, 1.0, 0.96);    // Bright highlight
-      vec3 auroraCol = vec3(0.85, 0.95, 0.88);   // Soft green accent
+      vec3 bgWarm = vec3(0.93, 0.97, 0.93);      // Soft cream with green tint
+      vec3 bgGreen = vec3(0.85, 0.93, 0.86);     // Pale sage
+      vec3 leafTone = vec3(0.72, 0.88, 0.75);    // Soft leaf green
+      vec3 lifeGlow = vec3(0.50, 0.75, 0.55);    // Fresh green glow
+      vec3 highlight = vec3(0.94, 1.0, 0.95);    // Bright highlight
+      vec3 auroraCol = vec3(0.78, 0.92, 0.82);   // Soft green accent
 
       // Build up the scene
-      col = mix(bgWarm, bgGreen, neb * 0.5);
-      col = mix(col, leafTone, organicGlow * 0.6);
-      col = mix(col, lifeGlow, organicShape * 0.5);
-      col = mix(col, highlight, organicShape * pulse * 0.3);
-      col = mix(col, auroraCol, aur * 0.2);
-      col += vec3(0.9, 1.0, 0.9) * parts * 0.5;
-      col = mix(col, leafTone, tend * 0.2);
+      col = mix(bgWarm, bgGreen, neb * 0.6);
+      col = mix(col, leafTone, organicGlow * 0.7);
+      col = mix(col, lifeGlow, organicShape * 0.55);
+      col = mix(col, highlight, organicShape * pulse * 0.25);
+      col = mix(col, auroraCol, aur * 0.25);
+      col += vec3(0.85, 0.98, 0.87) * parts * 0.6;
+      col = mix(col, leafTone, tend * 0.25);
       col -= vec3(0.03, 0.02, 0.03) * memb;
 
       // Soft radial warmth from center
       float centerWarm = 1.0 - length(p) * 0.8;
       centerWarm = smoothstep(0.0, 1.0, centerWarm);
-      col = mix(col, lifeGlow * 1.1, centerWarm * 0.15);
+      col = mix(col, lifeGlow * 1.1, centerWarm * 0.18);
     }
 
     // === FINAL TOUCHES ===
