@@ -138,6 +138,13 @@
 			"color": "subtle"
 		},
 		{
+			"date": "2026-04-01",
+			"label": "20 Week Scan",
+			"emoji": "🩺",
+			"color": "salmon",
+			"description": "Anatomy scan"
+		},
+		{
 			"date": "2026-04-12",
 			"label": "Engagement Party",
 			"emoji": "🎉",
