@@ -110,6 +110,12 @@
 			"description": "Until 20 Feb"
 		},
 		{
+			"date": "2026-03-05",
+			"label": "Midwife Appointment",
+			"emoji": "🤱",
+			"color": "salmon"
+		},
+		{
 			"date": "2026-03-10",
 			"label": "James' Baby Due",
 			"emoji": "🐣",
