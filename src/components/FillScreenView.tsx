@@ -1,3 +1,4 @@
+/*
 import { useMemo, useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { DayInfo } from "../types";
 import { LAYOUT } from "../constants";
@@ -224,3 +225,4 @@ export function FillScreenView({
 		</div>
 	);
 }
+*/

@@ -1,14 +1,14 @@
 import { useState, useEffect } from "preact/hooks";
 
-export type ViewMode = "fill" | "weekly" | "timeline";
+export type ViewMode = "weekly" | "timeline";
 
 const VIEW_MODE_KEY = "pregnancy-visualizer-view-mode";
-const ALL_MODES: ViewMode[] = ["fill", "weekly", "timeline"];
+const ALL_MODES: ViewMode[] = ["weekly", "timeline"];
 
 function getStoredViewMode(): ViewMode {
 	try {
 		const stored = localStorage.getItem(VIEW_MODE_KEY);
-		if (stored === "fill" || stored === "weekly" || stored === "timeline") {
+		if (stored === "weekly" || stored === "timeline") {
 			return stored;
 		}
 	} catch {

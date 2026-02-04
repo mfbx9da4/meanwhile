@@ -7,7 +7,6 @@ import {
 } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { haptic } from "ios-haptics";
-import { FillScreenView } from "./FillScreenView";
 import { WeeklyView } from "./WeeklyView";
 import { TimelineView } from "./TimelineView";
 import { InfoBar } from "./InfoBar";
@@ -167,7 +166,6 @@ export function App() {
 	const [windowSize, setWindowSize] = useState(getViewportSize);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const contentSize = useContentSize(contentRef);
-	const [showAnnotationDate, setShowAnnotationDate] = useState(false);
 	const [tooltip, setTooltip] = useState<TooltipState>(null);
 	const [viewMode, setViewMode] = useViewMode(windowSize.width);
 	const [randomMilestones, setRandomMilestones] = useState<Milestone[] | null>(
@@ -295,14 +293,6 @@ export function App() {
 		[tooltip],
 	);
 
-	// Cycle annotation display on mobile
-	useEffect(() => {
-		const interval = setInterval(() => {
-			setShowAnnotationDate((prev) => !prev);
-		}, 2500);
-		return () => clearInterval(interval);
-	}, []);
-
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 
@@ -361,17 +351,7 @@ export function App() {
 	return (
 		<div class="container">
 			<div ref={contentRef} style={{ flex: 1, overflow: "hidden" }}>
-				{viewMode === "fill" ? (
-					<FillScreenView
-						days={days}
-						windowSize={contentSize ?? windowSize}
-						showAnnotationDate={showAnnotationDate}
-						selectedDayIndex={tooltip?.day.index ?? null}
-						startDate={CONFIG.startDate}
-						annotationEmojis={annotationEmojis}
-						onDayClick={handleDayClick}
-					/>
-				) : viewMode === "weekly" ? (
+				{viewMode === "weekly" ? (
 					<WeeklyView
 						days={days}
 						windowSize={contentSize ?? windowSize}
