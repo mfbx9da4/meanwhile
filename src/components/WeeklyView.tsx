@@ -18,8 +18,8 @@ const MONTHS = [
 	"Dec",
 ];
 
-const DAY_LABELS = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
-const DAY_LABELS_SHORT = ["T", "F", "S", "S", "M", "T", "W"];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_LABELS_SHORT = ["S", "M", "T", "W", "T", "F", "S"];
 
 function addDays(date: Date, days: number): Date {
 	const result = new Date(date);
@@ -44,7 +44,7 @@ export function WeeklyView({
 	onDayClick,
 	selectedDayIndex,
 }: WeeklyViewProps) {
-	const startDayOfWeek = (startDate.getDay() + 3) % 7;
+	const startDayOfWeek = startDate.getDay();
 	const totalDays = days.length;
 	const totalWeeks = Math.ceil((startDayOfWeek + totalDays) / 7);
 
