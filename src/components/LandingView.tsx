@@ -30,7 +30,6 @@ export function LandingView({ onEnter }: LandingViewProps) {
 					Gaby & David
 					<br />
 					are expecting
-					<br />a baby
 				</span>
 			</div>
 			<button
