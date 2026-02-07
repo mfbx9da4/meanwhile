@@ -192,6 +192,12 @@
 			"description": "Start of third trimester"
 		},
 		{
+			"date": "2026-06-03",
+			"label": "Ceci's Baby Due",
+			"emoji": "🐣",
+			"color": "subtle"
+		},
+		{
 			"date": "2026-06-07",
 			"label": "Dan & Bex Wedding",
 			"emoji": "💒",
