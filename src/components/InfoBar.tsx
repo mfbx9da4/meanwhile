@@ -173,7 +173,7 @@ export function InfoBar({ totalDays, daysPassed, onToggleView, onOpenConfigEdito
 				<span class="info-full">{timeRemaining}</span>
 				<span class="info-compact">{timeRemainingCompact}</span>
 			</span>
-			{onOpenConfigEditor && (
+			{onOpenConfigEditor && showVersion && (
 				<button
 					class="view-toggle"
 					onClick={handleOpenEditor}
