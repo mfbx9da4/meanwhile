@@ -113,8 +113,12 @@ type InfoBarProps = {
 
 export function InfoBar({ totalDays, daysPassed, onToggleView, onOpenConfigEditor }: InfoBarProps) {
 	const [showVersion, setShowVersion] = useState(false);
+	const [editUnlocked, setEditUnlocked] = useState(false);
 	const [shuffleKey, setShuffleKey] = useState(0);
-	const handleVersionTap = useVersionTap(() => setShowVersion(true));
+	const handleVersionTap = useVersionTap(() => {
+		setShowVersion(true);
+		setEditUnlocked(true);
+	});
 
 	const handleOpenEditor = useCallback(() => {
 		haptic();
@@ -173,7 +177,7 @@ export function InfoBar({ totalDays, daysPassed, onToggleView, onOpenConfigEdito
 				<span class="info-full">{timeRemaining}</span>
 				<span class="info-compact">{timeRemainingCompact}</span>
 			</span>
-			{onOpenConfigEditor && showVersion && (
+			{onOpenConfigEditor && editUnlocked && (
 				<button
 					class="view-toggle"
 					onClick={handleOpenEditor}
