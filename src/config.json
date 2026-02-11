@@ -95,6 +95,13 @@
 			"description": "Start of second trimester"
 		},
 		{
+			"date": "2026-02-11",
+			"label": "It's a boy!",
+			"emoji": "👦",
+			"color": "blue",
+			"description": "Found out baby's gender"
+		},
+		{
 			"date": "2026-02-16",
 			"endDate": "2026-02-20",
 			"label": "Secret Holiday",
