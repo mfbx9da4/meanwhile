@@ -7,14 +7,14 @@
 			"date": "2025-11-16",
 			"label": "Start",
 			"emoji": "🌱",
-			"color": "blue",
+			"color": "orange",
 			"description": "Start of first trimester"
 		},
 		{
 			"date": "2025-12-24",
 			"label": "Discovery",
 			"emoji": "🕵️‍♀️",
-			"color": "gold"
+			"color": "orange"
 		},
 		{
 			"date": "2025-12-28",
@@ -43,13 +43,7 @@
 			"emoji": "🎂",
 			"color": "subtle"
 		},
-		{
-			"date": "2026-01-19",
-			"label": "Flu Jab",
-			"emoji": "💉",
-			"color": "subtle"
-		},
-		{
+{
 			"date": "2026-01-20",
 			"label": "First Midwife Appointment",
 			"emoji": "🤱",
@@ -91,7 +85,7 @@
 			"date": "2026-02-08",
 			"label": "Announce!",
 			"emoji": "📢",
-			"color": "blue",
+			"color": "orange",
 			"description": "Start of second trimester"
 		},
 		{
@@ -154,7 +148,7 @@
 			"date": "2026-04-12",
 			"label": "Engagement Party",
 			"emoji": "🎉",
-			"color": "orange"
+			"color": "pink"
 		},
 		{
 			"date": "2026-04-26",
@@ -188,7 +182,7 @@
 			"date": "2026-05-24",
 			"label": "Third Trimester",
 			"emoji": "🤰",
-			"color": "blue",
+			"color": "orange",
 			"description": "Start of third trimester"
 		},
 		{
@@ -226,7 +220,7 @@
 			"date": "2026-08-16",
 			"label": "Due",
 			"emoji": "🐣",
-			"color": "red"
+			"color": "purple"
 		}
 	]
 }
