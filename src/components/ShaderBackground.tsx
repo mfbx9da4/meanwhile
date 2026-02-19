@@ -7,9 +7,9 @@ const vertexShaderSource = `
   }
 `;
 
-// A shader that evokes the miracle of life beginning -
-// organic forms floating in warm fluid, cells dividing,
-// bioluminescent glow, the universe being born
+// A generative shader for landing-page algorithmic art.
+// The composition mixes domain-warped flow fields, orbiting rings,
+// and interference halos to feel alive rather than static.
 const fragmentShaderSource = `
   precision highp float;
   uniform vec2 u_resolution;
@@ -19,7 +19,7 @@ const fragmentShaderSource = `
   #define PI 3.14159265359
   #define TAU 6.28318530718
 
-  // Smooth noise
+  // Hash + value noise
   float hash(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
     p3 += dot(p3, p3.yzx + 33.33);
@@ -49,209 +49,119 @@ const fragmentShaderSource = `
     return sum;
   }
 
-  // Smooth metaball distance - organic blob shapes
-  float metaball(vec2 p, vec2 center, float radius) {
-    float d = length(p - center);
-    return radius / (d * d + 0.001);
+  vec2 rotate(vec2 p, float a) {
+    float c = cos(a);
+    float s = sin(a);
+    return mat2(c, -s, s, c) * p;
   }
 
-  // Heartbeat pulse - the rhythm of life
-  float heartbeat(float t) {
-    float beat = sin(t * TAU) * 0.5 + 0.5;
-    beat = pow(beat, 4.0);
-    // Double beat like a real heart
-    float beat2 = sin((t + 0.15) * TAU) * 0.5 + 0.5;
-    beat2 = pow(beat2, 8.0) * 0.5;
-    return beat + beat2;
+  // Domain warp creates fluid-like trajectories.
+  vec2 domainWarp(vec2 p, float t) {
+    vec2 q = vec2(
+      fbm(p * 1.5 + vec2(0.0, t * 0.12)),
+      fbm(p * 1.7 + vec2(4.2, -t * 0.1))
+    );
+    vec2 r = vec2(
+      fbm(p * 2.7 + q + vec2(1.7, 9.2) + t * 0.08),
+      fbm(p * 2.4 + q + vec2(8.3, 2.8) - t * 0.06)
+    );
+    return p + (q - 0.5) * 0.55 + (r - 0.5) * 0.28;
   }
 
-  // Cellular division pattern
-  vec2 cellDivide(vec2 p, float t) {
-    float split = sin(t * 0.5) * 0.5 + 0.5;
-    split = smoothstep(0.3, 0.7, split);
-    vec2 offset = vec2(split * 0.15, 0.0);
-    float d1 = length(p - offset);
-    float d2 = length(p + offset);
-    return vec2(d1, d2);
-  }
-
-  // Flowing tendrils - like umbilical connections
-  float tendril(vec2 p, float t) {
-    float angle = atan(p.y, p.x);
-    float radius = length(p);
-    float wave = sin(angle * 3.0 + t * 2.0 + radius * 8.0) * 0.5 + 0.5;
-    wave *= exp(-radius * 2.0);
-    return wave;
-  }
-
-  // Particle field - floating cells, stars being born
-  float particles(vec2 p, float t) {
+  // Orbiting halos + ripples add structured geometry.
+  float orbitField(vec2 p, float t) {
     float sum = 0.0;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      float a = fi * TAU / 7.0 + t * (0.1 + fi * 0.01);
+      float radius = 0.12 + 0.045 * sin(t * 0.35 + fi * 1.3);
+      vec2 center = vec2(cos(a), sin(a)) * radius * (1.8 + fi * 0.18);
+      float d = length(p - center);
+      float ring = smoothstep(0.1, 0.0, abs(d - 0.06 - 0.02 * sin(t + fi)));
+      sum += ring * (0.6 + 0.4 * sin(fi * 3.1 + t));
+    }
+    return sum;
+  }
+
+  // Polar interference lines feel hand-drawn and algorithmic.
+  float contourField(vec2 p, float t) {
+    float r = length(p);
+    float a = atan(p.y, p.x);
+    float spiral = sin(15.0 * r - 4.0 * a + t * 1.2);
+    float radial = sin(20.0 * r + t * 0.6);
+    float rays = sin(a * 11.0 - t * 0.8 + radial * 0.9);
+    return spiral * 0.45 + radial * 0.35 + rays * 0.2;
+  }
+
+  float particles(vec2 p, float t) {
+    float sparkle = 0.0;
+    for (int i = 0; i < 18; i++) {
       float fi = float(i);
       vec2 pos = vec2(
-        sin(fi * 1.7 + t * 0.3) * 0.4 + sin(fi * 0.3 + t * 0.1) * 0.2,
-        cos(fi * 2.3 + t * 0.2) * 0.4 + cos(fi * 0.7 + t * 0.15) * 0.2
+        sin(fi * 2.1 + t * 0.27) * 0.7 + sin(fi * 0.4 - t * 0.09) * 0.18,
+        cos(fi * 1.3 + t * 0.31) * 0.5 + cos(fi * 0.8 + t * 0.12) * 0.21
       );
-      float size = 0.015 + sin(fi * 3.7 + t) * 0.008;
+      float size = 0.006 + 0.01 * (sin(fi * 6.7 + t * 1.6) * 0.5 + 0.5);
       float d = length(p - pos);
-      float glow = size / (d + 0.01);
-      glow = pow(glow, 1.5);
-      sum += glow * 0.15;
+      sparkle += smoothstep(size, 0.0, d) * (0.3 + 0.7 * hash(vec2(fi, 3.1)));
     }
-    return sum;
+    return sparkle;
   }
 
-  // Nebula clouds - cosmic birth
-  float nebula(vec2 p, float t) {
-    vec2 q = p;
-    q += vec2(
-      fbm(p * 2.0 + t * 0.1),
-      fbm(p * 2.0 + vec2(5.2, 1.3) + t * 0.12)
-    ) * 0.3;
-    return fbm(q * 3.0);
-  }
-
-  // Aurora ribbons - ethereal light
-  float aurora(vec2 p, float t) {
-    float sum = 0.0;
-    for (int i = 0; i < 4; i++) {
-      float fi = float(i);
-      float y = sin(p.x * (3.0 + fi) + t * (0.5 + fi * 0.1) + fi * 2.0) * 0.15;
-      y += sin(p.x * (7.0 + fi * 2.0) + t * 0.3) * 0.05;
-      float ribbon = smoothstep(0.08, 0.0, abs(p.y - y - fi * 0.15 + 0.2));
-      ribbon *= 0.5 + 0.5 * sin(p.x * 20.0 + t * 2.0 + fi);
-      sum += ribbon * (0.4 - fi * 0.08);
-    }
-    return sum;
-  }
-
-  // Membrane texture - organic surface
-  float membrane(vec2 p, float t) {
-    float n = fbm(p * 8.0 + t * 0.2);
-    float n2 = fbm(p * 16.0 - t * 0.15);
-    return n * 0.6 + n2 * 0.4;
-  }
-
-  // Main composition
   void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution;
     float aspect = u_resolution.x / u_resolution.y;
 
-    // Centered coordinates
-    vec2 p = (uv - 0.5);
+    vec2 p = uv - 0.5;
     p.x *= aspect;
+    p *= 1.45;
 
-    float t = u_time * 0.4;
+    float t = u_time;
+    vec2 warped = domainWarp(p, t);
+    vec2 warped2 = domainWarp(rotate(p, 0.7), t * 0.75);
 
-    // === LAYER 1: Deep background nebula ===
-    float neb = nebula(p * 1.5, t * 0.5);
+    float flow = fbm(warped * 2.2 + vec2(t * 0.05, -t * 0.04));
+    float flow2 = fbm(warped2 * 3.4 - vec2(t * 0.07, t * 0.03));
+    float orbits = orbitField(warped * 0.9, t * 0.8);
+    float contours = contourField(warped2, t);
+    float grain = hash(gl_FragCoord.xy + t * 37.0);
+    float spark = particles(warped, t * 0.9);
 
-    // === LAYER 2: Central organic mass - the origin of life ===
-    float metaSum = 0.0;
+    float halo = exp(-2.8 * length(p));
+    float field = flow * 0.55 + flow2 * 0.45 + orbits * 0.2 + contours * 0.1;
 
-    // Main pulsing core
-    float pulse = heartbeat(t * 0.7) * 0.3 + 0.7;
-    metaSum += metaball(p, vec2(0.0), 0.08 * pulse);
-
-    // Orbiting cells - like the first division of life
-    for (int i = 0; i < 5; i++) {
-      float fi = float(i);
-      float angle = fi * TAU / 5.0 + t * 0.3;
-      float radius = 0.15 + sin(t * 0.5 + fi) * 0.05;
-      vec2 pos = vec2(cos(angle), sin(angle)) * radius;
-      float size = 0.025 + sin(t + fi * 2.0) * 0.01;
-      metaSum += metaball(p, pos, size);
-    }
-
-    // Smaller satellite particles
-    for (int i = 0; i < 8; i++) {
-      float fi = float(i);
-      float angle = fi * TAU / 8.0 - t * 0.2;
-      float radius = 0.28 + cos(t * 0.3 + fi * 1.5) * 0.08;
-      vec2 pos = vec2(cos(angle), sin(angle)) * radius;
-      metaSum += metaball(p, pos, 0.012);
-    }
-
-    // Convert metaball field to smooth organic shape
-    float organicShape = smoothstep(1.0, 3.0, metaSum);
-    float organicGlow = smoothstep(0.5, 2.5, metaSum) * 0.5;
-
-    // === LAYER 3: Flowing tendrils connecting everything ===
-    float tend = tendril(p, t);
-
-    // === LAYER 4: Floating particles - cellular matter / stardust ===
-    float parts = particles(p, t);
-
-    // === LAYER 5: Aurora / ethereal light waves ===
-    float aur = aurora(p, t);
-
-    // === LAYER 6: Subtle membrane texture ===
-    float memb = membrane(p, t) * 0.15;
-
-    // === COLOR COMPOSITION ===
     vec3 col;
 
     if (u_darkMode) {
-      // Dark mode: Deep forest womb - dark with subtle green glow
-      vec3 bgDeep = vec3(0.01, 0.02, 0.015);     // Near black with green hint
-      vec3 bgNebula = vec3(0.02, 0.05, 0.03);    // Deep green nebula
-      vec3 warmGlow = vec3(0.12, 0.35, 0.22);    // Muted forest green glow
-      vec3 lifeCore = vec3(0.25, 0.5, 0.35);     // Subdued mint core
-      vec3 auroraCol = vec3(0.15, 0.4, 0.25);    // Subtle green aurora
-      vec3 particleCol = vec3(0.4, 0.55, 0.45);  // Dim green particles
+      vec3 bg0 = vec3(0.015, 0.02, 0.03);
+      vec3 bg1 = vec3(0.02, 0.08, 0.08);
+      vec3 toneA = vec3(0.18, 0.42, 0.38);
+      vec3 toneB = vec3(0.24, 0.2, 0.45);
+      vec3 toneC = vec3(0.65, 0.85, 0.82);
 
-      // Build up the scene
-      col = mix(bgDeep, bgNebula, neb);
-      col += warmGlow * organicGlow * 0.6;
-      col = mix(col, lifeCore, organicShape * 0.5);
-      col += auroraCol * aur * 0.3;
-      col += particleCol * parts * 0.7;
-      col += warmGlow * tend * 0.2;
-      col += vec3(0.03, 0.06, 0.04) * memb;
-
-      // Vignette - darkness at edges
-      float vig = 1.0 - length(p) * 0.8;
-      vig = smoothstep(0.0, 1.0, vig);
-      col *= vig * 0.85 + 0.1;
+      col = mix(bg0, bg1, smoothstep(0.1, 0.9, flow));
+      col = mix(col, toneA, smoothstep(0.25, 0.9, field) * 0.6);
+      col += toneB * max(contours, 0.0) * 0.2;
+      col += toneC * (orbits * 0.15 + spark * 0.2);
+      col += vec3(0.2, 0.55, 0.45) * halo * 0.25;
+      col *= 0.7 + halo * 0.45;
 
     } else {
-      // Light mode: Fresh spring growth - soft and verdant
-      vec3 bgWarm = vec3(0.93, 0.97, 0.93);      // Soft cream with green tint
-      vec3 bgGreen = vec3(0.85, 0.93, 0.86);     // Pale sage
-      vec3 leafTone = vec3(0.72, 0.88, 0.75);    // Soft leaf green
-      vec3 lifeGlow = vec3(0.50, 0.75, 0.55);    // Fresh green glow
-      vec3 highlight = vec3(0.94, 1.0, 0.95);    // Bright highlight
-      vec3 auroraCol = vec3(0.78, 0.92, 0.82);   // Soft green accent
+      vec3 bg0 = vec3(0.89, 0.94, 0.93);
+      vec3 bg1 = vec3(0.78, 0.89, 0.86);
+      vec3 toneA = vec3(0.44, 0.69, 0.62);
+      vec3 toneB = vec3(0.56, 0.53, 0.82);
+      vec3 toneC = vec3(0.95, 0.99, 0.98);
 
-      // Build up the scene
-      col = mix(bgWarm, bgGreen, neb * 0.6);
-      col = mix(col, leafTone, organicGlow * 0.7);
-      col = mix(col, lifeGlow, organicShape * 0.55);
-      col = mix(col, highlight, organicShape * pulse * 0.25);
-      col = mix(col, auroraCol, aur * 0.25);
-      col += vec3(0.85, 0.98, 0.87) * parts * 0.6;
-      col = mix(col, leafTone, tend * 0.25);
-      col -= vec3(0.03, 0.02, 0.03) * memb;
-
-      // Soft radial warmth from center
-      float centerWarm = 1.0 - length(p) * 0.8;
-      centerWarm = smoothstep(0.0, 1.0, centerWarm);
-      col = mix(col, lifeGlow * 1.1, centerWarm * 0.18);
+      col = mix(bg0, bg1, smoothstep(0.15, 0.95, flow));
+      col = mix(col, toneA, smoothstep(0.2, 0.8, field) * 0.58);
+      col += toneB * max(contours, 0.0) * 0.08;
+      col = mix(col, toneC, halo * 0.25 + orbits * 0.08);
+      col += vec3(0.84, 0.95, 0.93) * spark * 0.2;
     }
 
-    // === FINAL TOUCHES ===
-
-    // Subtle chromatic shimmer
-    float shimmer = sin(uv.x * 50.0 + uv.y * 30.0 + t * 4.0);
-    shimmer = shimmer * 0.01 + 1.0;
-    col *= shimmer;
-
-    // Gentle breathing - the whole scene pulses subtly
-    float breath = sin(t * 0.8) * 0.02 + 1.0;
-    col *= breath;
-
-    // Ensure we don't clip
+    col += (grain - 0.5) * 0.028;
+    col *= 0.98 + 0.02 * sin(t * 0.7 + length(p) * 7.0);
     col = clamp(col, 0.0, 1.0);
 
     gl_FragColor = vec4(col, 1.0);
