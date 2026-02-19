@@ -161,6 +161,8 @@ function generateRandomMilestones(startDate: Date, dueDate: Date): Milestone[] {
 }
 
 const LANDING_SEEN_KEY = "meanwhile-landing-seen";
+const APP_PASSWORD_STORAGE_KEY = "meanwhile-page-password";
+const APP_PASSWORD = "hormones";
 
 export function App() {
 	const [windowSize, setWindowSize] = useState(getViewportSize);
@@ -175,6 +177,11 @@ export function App() {
 		return !localStorage.getItem(LANDING_SEEN_KEY);
 	});
 	const [showConfigEditor, setShowConfigEditor] = useState(false);
+	const [passwordInput, setPasswordInput] = useState("");
+	const [passwordError, setPasswordError] = useState("");
+	const [isAuthenticated, setIsAuthenticated] = useState(() => {
+		return localStorage.getItem(APP_PASSWORD_STORAGE_KEY) === APP_PASSWORD;
+	});
 
 	// Keyboard shortcuts
 	useEffect(() => {
@@ -343,6 +350,45 @@ export function App() {
 		setViewMode("timeline"); // Use timeline view on entry for consistent layout
 		setShowLanding(false);
 	}, []);
+
+	const handlePasswordSubmit = useCallback(
+		(e: Event) => {
+			e.preventDefault();
+			if (passwordInput === APP_PASSWORD) {
+				localStorage.setItem(APP_PASSWORD_STORAGE_KEY, APP_PASSWORD);
+				setIsAuthenticated(true);
+				setPasswordError("");
+				return;
+			}
+
+			setPasswordError("Wrong password");
+		},
+		[passwordInput],
+	);
+
+	if (!isAuthenticated) {
+		return (
+			<div class="password-screen">
+				<form class="password-form" onSubmit={handlePasswordSubmit}>
+					<h1>Meanwhile</h1>
+					<label for="password-input">Enter password</label>
+					<input
+						id="password-input"
+						type="password"
+						value={passwordInput}
+						onInput={(e) => {
+							setPasswordInput(e.currentTarget.value);
+							if (passwordError) setPasswordError("");
+						}}
+						autocomplete="current-password"
+						required
+					/>
+					<button type="submit">Unlock</button>
+					{passwordError && <p class="password-error">{passwordError}</p>}
+				</form>
+			</div>
+		);
+	}
 
 	if (showLanding) {
 		return <LandingView onEnter={handleLandingEnter} />;
