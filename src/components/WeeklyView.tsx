@@ -137,6 +137,9 @@ export function WeeklyView({
 
 	const usedDayLabels = cellSize < 20 ? DAY_LABELS_SHORT : DAY_LABELS;
 
+	const getWeekNumberTransitionName = (weekNum: number) =>
+		`week-number-${weekNum}`;
+
 	if (isLandscape) {
 		const gridWidth = totalWeeks * cellSize + (totalWeeks - 1) * gap;
 
@@ -177,6 +180,7 @@ export function WeeklyView({
 									key={i}
 									class="weekly-week-num"
 									style={{
+										viewTransitionName: getWeekNumberTransitionName(label.weekNum),
 										left: `${label.position * (cellSize + gap) + cellSize / 2}px`,
 										fontSize: `${labelSize}px`,
 									}}
@@ -289,7 +293,13 @@ export function WeeklyView({
 
 					{weekData.map((week, weekIndex) => (
 						<>
-							<div key={`week-${weekIndex}`} class="weekly-week-num">
+							<div
+								key={`week-${weekIndex}`}
+								class="weekly-week-num"
+								style={{
+									viewTransitionName: getWeekNumberTransitionName(weekIndex + 1),
+								}}
+							>
 								{weekIndex + 1}
 							</div>
 							{week.map((day, dayOfWeek) =>
