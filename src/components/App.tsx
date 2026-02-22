@@ -12,6 +12,7 @@ import { TimelineView } from "./TimelineView";
 import { InfoBar } from "./InfoBar";
 import { Tooltip } from "./Tooltip";
 import { LandingView } from "./LandingView";
+import { ShaderBackground } from "./ShaderBackground";
 import { ConfigEditor } from "./ConfigEditor";
 import { useViewMode, getNextViewMode } from "../hooks/useViewMode";
 import { useContentSize } from "../hooks/useContentSize";
@@ -369,6 +370,7 @@ export function App() {
 	if (!isAuthenticated) {
 		return (
 			<div class="password-screen">
+				<ShaderBackground />
 				<form class="password-form" onSubmit={handlePasswordSubmit}>
 					<h1>Meanwhile</h1>
 					<label for="password-input">Enter password</label>
