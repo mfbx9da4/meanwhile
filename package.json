@@ -11,6 +11,7 @@
     "format": "biome format --write src/",
     "worker": "pnpm --filter meanwhile-config-editor dev",
     "worker:deploy": "pnpm --filter meanwhile-config-editor deploy",
+    "test:e2e": "playwright test",
     "worker:test": "pnpm --filter meanwhile-config-editor test",
     "worker:setup": "pnpm --filter meanwhile-config-editor setup-secrets"
   },
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
+    "@playwright/test": "^1.58.2",
     "@preact/preset-vite": "^2.10.2",
     "@types/node": "^24.10.1",
     "typescript": "~5.9.3",

@@ -8,6 +8,7 @@ import {
 import { signal } from "@preact/signals";
 import { haptic } from "ios-haptics";
 import { WeeklyView } from "./WeeklyView";
+import { MonthlyView } from "./MonthlyView";
 import { TimelineView } from "./TimelineView";
 import { InfoBar } from "./InfoBar";
 import { Tooltip } from "./Tooltip";
@@ -352,7 +353,16 @@ export function App() {
 	return (
 		<div class="container">
 			<div ref={contentRef} style={{ flex: 1, overflow: "hidden" }}>
-				{viewMode === "weekly" || viewMode === "monthly" ? (
+				{viewMode === "monthly" ? (
+					<MonthlyView
+						days={days}
+						windowSize={contentSize ?? windowSize}
+						isLandscape={isLandscape}
+						startDate={CONFIG.startDate}
+						onDayClick={handleDayClick}
+						selectedDayIndex={tooltip?.day.index ?? null}
+					/>
+				) : viewMode === "weekly" ? (
 					<WeeklyView
 						days={days}
 						windowSize={contentSize ?? windowSize}
@@ -360,7 +370,6 @@ export function App() {
 						startDate={CONFIG.startDate}
 						onDayClick={handleDayClick}
 						selectedDayIndex={tooltip?.day.index ?? null}
-						mode={viewMode}
 					/>
 				) : (
 					<TimelineView

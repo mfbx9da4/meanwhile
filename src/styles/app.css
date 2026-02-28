@@ -728,6 +728,40 @@ body {
 	font-weight: 700;
 }
 
+/* Landscape monthly sections - 9 sections side by side */
+.landscape-monthly-wrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+}
+
+.landscape-monthly-section {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.landscape-monthly-month-num {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-secondary);
+	font-weight: 700;
+}
+
+.landscape-monthly-cal-labels {
+	display: flex;
+	flex-direction: row;
+}
+
+.landscape-monthly-cal-label {
+	text-align: center;
+	color: var(--color-text-secondary);
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
 .weekly-grid-wrapper {
 	display: flex;
 	flex-direction: column;
