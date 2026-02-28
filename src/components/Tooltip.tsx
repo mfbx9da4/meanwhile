@@ -1,5 +1,6 @@
 import type { DayInfo } from "../types";
 import { CountdownTimer } from "./CountdownTimer";
+import { getMonthForDay, getMonthStart } from "../constants";
 
 const MONTHS = [
 	"Jan",
@@ -90,6 +91,7 @@ type TooltipProps = {
 	annotationEmojis: Record<string, string>;
 	annotationDescriptions: Record<string, string>;
 	viewMode?: "weekly" | "monthly" | "timeline";
+	totalDays: number;
 };
 
 export function Tooltip({
@@ -101,12 +103,13 @@ export function Tooltip({
 	annotationEmojis,
 	annotationDescriptions,
 	viewMode,
+	totalDays,
 }: TooltipProps) {
 	const date = addDays(startDate, day.index);
 	const weekNum = Math.floor(day.index / 7) + 1;
 	const dayOffset = day.index % 7;
-	const monthNum = Math.floor(day.index / 31);
-	const dayInMonth = day.index % 31;
+	const monthNum = getMonthForDay(day.index, totalDays);
+	const dayInMonth = day.index - getMonthStart(monthNum, totalDays);
 	const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
 		date.getDay()
 	];

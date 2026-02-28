@@ -1,6 +1,6 @@
 import { useMemo } from "preact/hooks";
 import type { DayInfo } from "../types";
-import { LAYOUT } from "../constants";
+import { LAYOUT, NUM_MONTHS, getMonthStart, getMonthForDay } from "../constants";
 import { highlightedDays } from "./App";
 
 const MONTHS = [
@@ -29,7 +29,6 @@ function addDays(date: Date, days: number): Date {
 	return result;
 }
 
-const MONTH_DAYS = 31;
 
 type WeeklyViewProps = {
 	days: DayInfo[];
@@ -71,7 +70,7 @@ export function WeeklyView({
 				lastMonth = month;
 			}
 
-			const month30Num = Math.floor(i / MONTH_DAYS) + 1;
+			const month30Num = getMonthForDay(i, totalDays) + 1;
 			if (month30Num !== lastMonth30) {
 				const weekIndex = Math.floor((startDayOfWeek + i) / 7);
 				if (!month30StartsInWeek.has(weekIndex)) {
@@ -122,16 +121,12 @@ export function WeeklyView({
 			// Each month grid starts on Monday: (getDay() + 6) % 7
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
 			numCols = 7;
-			const numMonths = Math.ceil(totalDays / MONTH_DAYS);
 			const sectionGap = 8; // matches CSS .monthly-sections gap
 			// Count total week rows across all per-month grids
 			let totalMonthWeeks = 0;
-			for (let m = 0; m < numMonths; m++) {
-				const monthStartDay = m * MONTH_DAYS;
-				const monthEndDay = Math.min(
-					(m + 1) * MONTH_DAYS - 1,
-					totalDays - 1,
-				);
+			for (let m = 0; m < NUM_MONTHS; m++) {
+				const monthStartDay = getMonthStart(m, totalDays);
+				const monthEndDay = getMonthStart(m + 1, totalDays) - 1;
 				const monthDayCount = monthEndDay - monthStartDay + 1;
 				const monthStartDow =
 					(addDays(startDate, monthStartDay).getDay() + 6) % 7;
@@ -145,7 +140,7 @@ export function WeeklyView({
 				windowSize.height -
 				padding * 2 -
 				headerHeight -
-				sectionGap * (numMonths - 1) -
+				sectionGap * (NUM_MONTHS - 1) -
 				weeklyGridGap; // header-to-cell gap in first section
 			numRows = totalMonthWeeks;
 		} else {
@@ -190,16 +185,15 @@ export function WeeklyView({
 
 	const monthSections = useMemo(() => {
 		if (mode !== "monthly" || isLandscape) return [];
-		const numMonths = Math.ceil(totalDays / MONTH_DAYS);
 		const sections: {
 			monthNum: number;
 			weeks: (DayInfo | null)[][];
 			monthLabels: Map<number, string>;
 		}[] = [];
 
-		for (let m = 0; m < numMonths; m++) {
-			const monthStartDay = m * MONTH_DAYS;
-			const monthEndDay = Math.min((m + 1) * MONTH_DAYS - 1, totalDays - 1);
+		for (let m = 0; m < NUM_MONTHS; m++) {
+			const monthStartDay = getMonthStart(m, totalDays);
+			const monthEndDay = getMonthStart(m + 1, totalDays) - 1;
 			const monthDayCount = monthEndDay - monthStartDay + 1;
 			// Monday-based: (getDay() + 6) % 7 gives 0=Mon, 6=Sun
 			const monthStartDow =

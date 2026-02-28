@@ -391,6 +391,7 @@ export function App() {
 					annotationEmojis={annotationEmojis}
 					annotationDescriptions={annotationDescriptions}
 					viewMode={viewMode}
+					totalDays={totalDays}
 				/>
 			)}
 			{showConfigEditor && (

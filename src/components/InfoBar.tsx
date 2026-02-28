@@ -6,6 +6,7 @@ import {
 	useMemo,
 } from "preact/hooks";
 import { haptic } from "ios-haptics";
+import { NUM_MONTHS, getMonthStart, getMonthForDay } from "../constants";
 
 // Grid positions for 3x3 grid
 const GRID_POSITIONS = [
@@ -114,7 +115,6 @@ type InfoBarProps = {
 	onOpenConfigEditor?: () => void;
 };
 
-const MONTH_DAYS = 31;
 
 export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenConfigEditor }: InfoBarProps) {
 	const [showVersion, setShowVersion] = useState(false);
@@ -152,10 +152,11 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 	const extraDaysWeek = daysRemaining % 7;
 
 	// Monthly calculations (completed months + days into current)
-	const currentMonth = Math.floor(daysElapsed / MONTH_DAYS);
-	const currentDayInMonth = daysElapsed % MONTH_DAYS;
-	const monthsRemaining = Math.floor(daysRemaining / MONTH_DAYS);
-	const extraDaysMonth = daysRemaining % MONTH_DAYS;
+	const currentMonth = getMonthForDay(daysElapsed, totalDays);
+	const currentDayInMonth = daysElapsed - getMonthStart(currentMonth, totalDays);
+	const monthsRemaining = NUM_MONTHS - 1 - currentMonth;
+	const daysLeftInCurrentMonth = getMonthStart(currentMonth + 1, totalDays) - daysElapsed;
+	const extraDaysMonth = monthsRemaining > 0 ? daysLeftInCurrentMonth : daysRemaining;
 
 	const timeRemaining = isMonthly
 		? monthsRemaining > 0
