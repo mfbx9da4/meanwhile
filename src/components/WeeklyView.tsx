@@ -221,19 +221,15 @@ export function WeeklyView({
 				weeks.push(weekDays);
 			}
 
-			// Calendar month labels for this section (using Monday-based offset)
+			// Calendar month labels: only on the row containing the 1st of each month
 			const monthLabels = new Map<number, string>();
-			let lastCalMonth = -1;
 			for (let d = monthStartDay; d <= monthEndDay; d++) {
-				const calMonth = addDays(startDate, d).getMonth();
-				if (calMonth !== lastCalMonth) {
+				const date = addDays(startDate, d);
+				if (date.getDate() === 1) {
 					const weekInSection = Math.floor(
 						(monthStartDow + d - monthStartDay) / 7,
 					);
-					if (!monthLabels.has(weekInSection)) {
-						monthLabels.set(weekInSection, MONTHS[calMonth]);
-					}
-					lastCalMonth = calMonth;
+					monthLabels.set(weekInSection, MONTHS[date.getMonth()]);
 				}
 			}
 
@@ -397,6 +393,7 @@ export function WeeklyView({
 	} else if (mode === "monthly") {
 		// Portrait monthly: separate sections per month, each with its own grid
 		// Only first section has day-of-week header; all grids start on Monday
+		const monthNumFontSize = `${Math.max(labelSize * 1.2, 10)}px`;
 		return (
 			<div
 				class="weekly-view portrait monthly-sections"
@@ -409,7 +406,7 @@ export function WeeklyView({
 							style={{
 								gap: `${gap}px`,
 								fontSize: `${labelSize}px`,
-								gridTemplateColumns: `auto repeat(7, ${cellSize}px) auto`,
+								gridTemplateColumns: `${LAYOUT.weekLabelWidth}px repeat(7, ${cellSize}px) auto`,
 								gridTemplateRows:
 									sectionIdx === 0
 										? `auto repeat(${section.weeks.length}, ${cellSize}px)`
@@ -419,16 +416,7 @@ export function WeeklyView({
 							{/* Only first section gets day label header row */}
 							{sectionIdx === 0 && (
 								<>
-									<div
-										class="monthly-section-month-num"
-										style={{
-											fontSize: `${Math.max(labelSize * 1.8, 16)}px`,
-											viewTransitionName:
-												getMonthNumberTransitionName(section.monthNum),
-										}}
-									>
-										{section.monthNum}
-									</div>
+									<div class="weekly-corner" />
 									{usedDayLabelsMon.map((label, i) => (
 										<div key={`day-${i}`} class="weekly-day-label">
 											{label}
@@ -440,13 +428,13 @@ export function WeeklyView({
 
 							{section.weeks.map((week, weekIdx) => (
 								<>
-									{/* Month number in first row's left cell (sections 2+) */}
-									{sectionIdx > 0 && weekIdx === 0 ? (
+									{/* Month number in first row's left cell */}
+									{weekIdx === 0 ? (
 										<div
 											key={`mn-${section.monthNum}`}
 											class="monthly-section-month-num"
 											style={{
-												fontSize: `${Math.max(labelSize * 1.8, 16)}px`,
+												fontSize: monthNumFontSize,
 												viewTransitionName:
 													getMonthNumberTransitionName(section.monthNum),
 											}}
