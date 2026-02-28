@@ -114,7 +114,7 @@ type InfoBarProps = {
 	onOpenConfigEditor?: () => void;
 };
 
-const MONTH_DAYS = 30;
+const MONTH_DAYS = 31;
 
 export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenConfigEditor }: InfoBarProps) {
 	const [showVersion, setShowVersion] = useState(false);

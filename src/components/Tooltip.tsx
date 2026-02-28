@@ -105,8 +105,8 @@ export function Tooltip({
 	const date = addDays(startDate, day.index);
 	const weekNum = Math.floor(day.index / 7) + 1;
 	const dayOffset = day.index % 7;
-	const monthNum = Math.floor(day.index / 30) + 1;
-	const weekInMonth = Math.floor((day.index % 30) / 7) + 1;
+	const monthNum = Math.floor(day.index / 31) + 1;
+	const weekInMonth = Math.floor((day.index % 31) / 7) + 1;
 	const dayInWeek = day.index % 7;
 	const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
 		date.getDay()

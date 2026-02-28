@@ -29,7 +29,7 @@ function addDays(date: Date, days: number): Date {
 	return result;
 }
 
-const MONTH_DAYS = 30;
+const MONTH_DAYS = 31;
 
 type WeeklyViewProps = {
 	days: DayInfo[];
