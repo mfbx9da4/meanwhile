@@ -105,9 +105,8 @@ export function Tooltip({
 	const date = addDays(startDate, day.index);
 	const weekNum = Math.floor(day.index / 7) + 1;
 	const dayOffset = day.index % 7;
-	const monthNum = Math.floor(day.index / 31) + 1;
-	const weekInMonth = Math.floor((day.index % 31) / 7) + 1;
-	const dayInWeek = day.index % 7;
+	const monthNum = Math.floor(day.index / 31);
+	const dayInMonth = day.index % 31;
 	const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
 		date.getDay()
 	];
@@ -150,7 +149,7 @@ export function Tooltip({
 				<div class="tooltip-date">{fullDate}</div>
 				<div class="tooltip-week">
 					{viewMode === "monthly"
-						? `Month ${monthNum}, Week ${weekInMonth}${dayInWeek > 0 ? ` + ${dayInWeek}` : ""}`
+						? `Month ${monthNum}${dayInMonth > 0 ? ` + ${dayInMonth}` : ""}`
 						: `Week ${weekNum}${dayOffset > 0 ? ` + ${dayOffset}` : ""}`}
 				</div>
 				{day.annotation && (
