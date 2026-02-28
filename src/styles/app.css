@@ -705,13 +705,13 @@ body {
 
 /* Monthly sections - portrait mode with separate sections per month */
 .monthly-sections {
-	overflow-y: auto;
-	overflow-x: hidden;
+	overflow: hidden;
 	height: 100%;
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	gap: 16px;
 }
 

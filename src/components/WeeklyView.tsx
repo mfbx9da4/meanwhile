@@ -116,21 +116,19 @@ export function WeeklyView({
 			numCols = totalWeeks;
 			numRows = 7;
 		} else if (mode === "monthly") {
-			// Portrait monthly: size cells for a single month section (scrollable)
+			// Portrait monthly: all sections must fit on screen (no scroll)
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
-			availableHeight = windowSize.height - padding * 2 - dayLabelHeight;
 			numCols = 7;
-			// Use max weeks per month (~5) instead of totalWeeks for larger cells
-			const totalMonths30 = Math.ceil(totalDays / MONTH_DAYS);
-			let maxWPM = 5;
-			for (let m = 0; m < totalMonths30; m++) {
-				const firstDay = m * MONTH_DAYS;
-				const lastDay = Math.min((m + 1) * MONTH_DAYS - 1, totalDays - 1);
-				const firstWeek = Math.floor((startDayOfWeek + firstDay) / 7);
-				const lastWeek = Math.floor((startDayOfWeek + lastDay) / 7);
-				maxWPM = Math.max(maxWPM, lastWeek - firstWeek + 1);
-			}
-			numRows = maxWPM;
+			const numMonths = Math.ceil(totalDays / MONTH_DAYS);
+			const sectionGap = 16; // matches CSS .monthly-sections gap
+			// Subtract overhead: headers per section + gaps between sections + rounding buffer
+			availableHeight =
+				windowSize.height -
+				padding * 2 -
+				dayLabelHeight * numMonths -
+				sectionGap * (numMonths - 1) -
+				numMonths; // 1px buffer per section for rounding
+			numRows = totalWeeks;
 		} else {
 			// Portrait weekly
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
@@ -145,9 +143,10 @@ export function WeeklyView({
 			(availableHeight - weeklyGridGap * (numRows - 1)) / numRows;
 		const size = Math.min(maxCellWidth, maxCellHeight);
 
+		const cellSize = Math.max(Math.floor(size), 8);
 		return {
-			cellSize: Math.max(size, 8),
-			labelSize: Math.max(8, Math.min(11, size * 0.4)),
+			cellSize,
+			labelSize: Math.max(8, Math.min(11, cellSize * 0.4)),
 			gap: weeklyGridGap,
 		};
 	}, [windowSize, isLandscape, totalWeeks, mode, totalDays, startDayOfWeek]);
