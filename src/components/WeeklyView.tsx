@@ -27,6 +27,8 @@ function addDays(date: Date, days: number): Date {
 	return result;
 }
 
+const MONTH_DAYS = 30;
+
 type WeeklyViewProps = {
 	days: DayInfo[];
 	windowSize: { width: number; height: number };
@@ -34,6 +36,7 @@ type WeeklyViewProps = {
 	startDate: Date;
 	onDayClick: (e: MouseEvent, day: DayInfo) => void;
 	selectedDayIndex: number | null;
+	mode?: "weekly" | "monthly";
 };
 
 export function WeeklyView({
@@ -43,6 +46,7 @@ export function WeeklyView({
 	startDate,
 	onDayClick,
 	selectedDayIndex,
+	mode = "weekly",
 }: WeeklyViewProps) {
 	const startDayOfWeek = startDate.getDay();
 	const totalDays = days.length;
@@ -50,7 +54,9 @@ export function WeeklyView({
 
 	const weekLabels = useMemo(() => {
 		const monthStartsInWeek: Map<number, string> = new Map();
+		const month30StartsInWeek: Map<number, number> = new Map();
 		let lastMonth = -1;
+		let lastMonth30 = -1;
 
 		for (let i = 0; i < totalDays; i++) {
 			const date = addDays(startDate, i);
@@ -62,13 +68,28 @@ export function WeeklyView({
 				}
 				lastMonth = month;
 			}
+
+			const month30Num = Math.floor(i / MONTH_DAYS) + 1;
+			if (month30Num !== lastMonth30) {
+				const weekIndex = Math.floor((startDayOfWeek + i) / 7);
+				if (!month30StartsInWeek.has(weekIndex)) {
+					month30StartsInWeek.set(weekIndex, month30Num);
+				}
+				lastMonth30 = month30Num;
+			}
 		}
 
-		const labels: { weekNum: number; month?: string; position: number }[] = [];
+		const labels: {
+			weekNum: number;
+			month?: string;
+			month30Num?: number;
+			position: number;
+		}[] = [];
 		for (let week = 0; week < totalWeeks; week++) {
 			labels.push({
 				weekNum: week + 1,
 				month: monthStartsInWeek.get(week),
+				month30Num: month30StartsInWeek.get(week),
 				position: week,
 			});
 		}
@@ -139,6 +160,8 @@ export function WeeklyView({
 
 	const getWeekNumberTransitionName = (weekNum: number) =>
 		`week-number-${weekNum}`;
+	const getMonthNumberTransitionName = (monthNum: number) =>
+		`month-number-${monthNum}`;
 
 	if (isLandscape) {
 		const gridWidth = totalWeeks * cellSize + (totalWeeks - 1) * gap;
@@ -175,19 +198,39 @@ export function WeeklyView({
 							class="weekly-week-nums-row"
 							style={{ height: `${labelSize + 4}px`, width: `${gridWidth}px` }}
 						>
-							{weekLabels.map((label, i) => (
-								<span
-									key={i}
-									class="weekly-week-num"
-									style={{
-										viewTransitionName: getWeekNumberTransitionName(label.weekNum),
-										left: `${label.position * (cellSize + gap) + cellSize / 2}px`,
-										fontSize: `${labelSize}px`,
-									}}
-								>
-									{label.weekNum}
-								</span>
-							))}
+							{mode === "monthly"
+								? weekLabels
+										.filter((l) => l.month30Num)
+										.map((label, i) => (
+											<span
+												key={i}
+												class="weekly-week-num"
+												style={{
+													viewTransitionName: getMonthNumberTransitionName(
+														label.month30Num!,
+													),
+													left: `${label.position * (cellSize + gap) + cellSize / 2}px`,
+													fontSize: `${labelSize}px`,
+												}}
+											>
+												{label.month30Num}
+											</span>
+										))
+								: weekLabels.map((label, i) => (
+										<span
+											key={i}
+											class="weekly-week-num"
+											style={{
+												viewTransitionName: getWeekNumberTransitionName(
+													label.weekNum,
+												),
+												left: `${label.position * (cellSize + gap) + cellSize / 2}px`,
+												fontSize: `${labelSize}px`,
+											}}
+										>
+											{label.weekNum}
+										</span>
+									))}
 						</div>
 
 						<div
@@ -297,10 +340,19 @@ export function WeeklyView({
 								key={`week-${weekIndex}`}
 								class="weekly-week-num"
 								style={{
-									viewTransitionName: getWeekNumberTransitionName(weekIndex + 1),
+									viewTransitionName:
+										mode === "monthly" && weekLabels[weekIndex]?.month30Num
+											? getMonthNumberTransitionName(
+													weekLabels[weekIndex].month30Num!,
+												)
+											: mode === "weekly"
+												? getWeekNumberTransitionName(weekIndex + 1)
+												: undefined,
 								}}
 							>
-								{weekIndex + 1}
+								{mode === "monthly"
+									? (weekLabels[weekIndex]?.month30Num ?? "")
+									: weekIndex + 1}
 							</div>
 							{week.map((day, dayOfWeek) =>
 								day ? (

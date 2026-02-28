@@ -367,30 +367,30 @@ export function App() {
 		[passwordInput],
 	);
 
-	if (!isAuthenticated) {
-		return (
-			<div class="password-screen">
-				<ShaderBackground />
-				<form class="password-form" onSubmit={handlePasswordSubmit}>
-					<h1>Meanwhile</h1>
-					<label for="password-input">Enter password</label>
-					<input
-						id="password-input"
-						type="password"
-						value={passwordInput}
-						onInput={(e) => {
-							setPasswordInput(e.currentTarget.value);
-							if (passwordError) setPasswordError("");
-						}}
-						autocomplete="current-password"
-						required
-					/>
-					<button type="submit">Unlock</button>
-					{passwordError && <p class="password-error">{passwordError}</p>}
-				</form>
-			</div>
-		);
-	}
+	// if (!isAuthenticated) {
+	// 	return (
+	// 		<div class="password-screen">
+	// 			<ShaderBackground />
+	// 			<form class="password-form" onSubmit={handlePasswordSubmit}>
+	// 				<h1>Meanwhile</h1>
+	// 				<label for="password-input">Enter password</label>
+	// 				<input
+	// 					id="password-input"
+	// 					type="password"
+	// 					value={passwordInput}
+	// 					onInput={(e) => {
+	// 						setPasswordInput(e.currentTarget.value);
+	// 						if (passwordError) setPasswordError("");
+	// 					}}
+	// 					autocomplete="current-password"
+	// 					required
+	// 				/>
+	// 				<button type="submit">Unlock</button>
+	// 				{passwordError && <p class="password-error">{passwordError}</p>}
+	// 			</form>
+	// 		</div>
+	// 	);
+	// }
 
 	if (showLanding) {
 		return <LandingView onEnter={handleLandingEnter} />;
@@ -399,7 +399,7 @@ export function App() {
 	return (
 		<div class="container">
 			<div ref={contentRef} style={{ flex: 1, overflow: "hidden" }}>
-				{viewMode === "weekly" ? (
+				{viewMode === "weekly" || viewMode === "monthly" ? (
 					<WeeklyView
 						days={days}
 						windowSize={contentSize ?? windowSize}
@@ -407,6 +407,7 @@ export function App() {
 						startDate={CONFIG.startDate}
 						onDayClick={handleDayClick}
 						selectedDayIndex={tooltip?.day.index ?? null}
+						mode={viewMode}
 					/>
 				) : (
 					<TimelineView
@@ -423,6 +424,7 @@ export function App() {
 			<InfoBar
 				totalDays={totalDays}
 				daysPassed={daysPassed}
+				viewMode={viewMode}
 				onToggleView={toggleViewMode}
 				onOpenConfigEditor={() => setShowConfigEditor(true)}
 			/>

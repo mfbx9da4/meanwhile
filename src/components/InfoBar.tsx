@@ -104,14 +104,19 @@ function EditIcon() {
 	);
 }
 
+import type { ViewMode } from "../hooks/useViewMode";
+
 type InfoBarProps = {
 	totalDays: number;
 	daysPassed: number;
+	viewMode: ViewMode;
 	onToggleView: () => void;
 	onOpenConfigEditor?: () => void;
 };
 
-export function InfoBar({ totalDays, daysPassed, onToggleView, onOpenConfigEditor }: InfoBarProps) {
+const MONTH_DAYS = 30;
+
+export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenConfigEditor }: InfoBarProps) {
 	const [showVersion, setShowVersion] = useState(false);
 	const [editUnlocked, setEditUnlocked] = useState(false);
 	const [shuffleKey, setShuffleKey] = useState(0);
@@ -136,20 +141,36 @@ export function InfoBar({ totalDays, daysPassed, onToggleView, onOpenConfigEdito
 	}, [onToggleView]);
 
 	const daysRemaining = totalDays - daysPassed;
-	const weeksRemaining = Math.floor(daysRemaining / 7);
-	const extraDays = daysRemaining % 7;
-	const timeRemaining =
-		weeksRemaining > 0
-			? `Due in ${weeksRemaining} week${weeksRemaining !== 1 ? "s" : ""}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? "s" : ""}` : ""}`
-			: `Due in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`;
-	const timeRemainingCompact =
-		weeksRemaining > 0
-			? `Due in ${weeksRemaining}w${extraDays > 0 ? ` ${extraDays}d` : ""}`
-			: `Due in ${daysRemaining}d`;
 	const daysElapsed = Math.max(0, daysPassed - 1);
+	const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1);
+	const isMonthly = viewMode === "monthly";
+
+	// Weekly calculations
 	const currentWeek = Math.floor(daysElapsed / 7) + 1;
 	const currentDayInWeek = daysElapsed % 7;
-	const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1);
+	const weeksRemaining = Math.floor(daysRemaining / 7);
+	const extraDaysWeek = daysRemaining % 7;
+
+	// Monthly calculations
+	const currentMonth = Math.floor(daysElapsed / MONTH_DAYS) + 1;
+	const currentDayInMonth = daysElapsed % MONTH_DAYS;
+	const monthsRemaining = Math.floor(daysRemaining / MONTH_DAYS);
+	const extraDaysMonth = daysRemaining % MONTH_DAYS;
+
+	const timeRemaining = isMonthly
+		? monthsRemaining > 0
+			? `Due in ${monthsRemaining} month${monthsRemaining !== 1 ? "s" : ""}${extraDaysMonth > 0 ? ` and ${extraDaysMonth} day${extraDaysMonth !== 1 ? "s" : ""}` : ""}`
+			: `Due in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`
+		: weeksRemaining > 0
+			? `Due in ${weeksRemaining} week${weeksRemaining !== 1 ? "s" : ""}${extraDaysWeek > 0 ? ` and ${extraDaysWeek} day${extraDaysWeek !== 1 ? "s" : ""}` : ""}`
+			: `Due in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`;
+	const timeRemainingCompact = isMonthly
+		? monthsRemaining > 0
+			? `Due in ${monthsRemaining}mo${extraDaysMonth > 0 ? ` ${extraDaysMonth}d` : ""}`
+			: `Due in ${daysRemaining}d`
+		: weeksRemaining > 0
+			? `Due in ${weeksRemaining}w${extraDaysWeek > 0 ? ` ${extraDaysWeek}d` : ""}`
+			: `Due in ${daysRemaining}d`;
 
 	return (
 		<div class="info">
@@ -162,12 +183,16 @@ export function InfoBar({ totalDays, daysPassed, onToggleView, onOpenConfigEdito
 			</button>
 			<span class="info-text">
 				<span class="info-full">
-					Week {currentWeek}
-					{currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}
+					{isMonthly ? "Month" : "Week"} {isMonthly ? currentMonth : currentWeek}
+					{(isMonthly ? currentDayInMonth : currentDayInWeek) > 0
+						? ` + ${isMonthly ? currentDayInMonth : currentDayInWeek}`
+						: ""}
 				</span>
 				<span class="info-compact">
-					Wk {currentWeek}
-					{currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}
+					{isMonthly ? "Mo" : "Wk"} {isMonthly ? currentMonth : currentWeek}
+					{(isMonthly ? currentDayInMonth : currentDayInWeek) > 0
+						? ` + ${isMonthly ? currentDayInMonth : currentDayInWeek}`
+						: ""}
 				</span>
 			</span>
 			<span class="info-text" onClick={handleVersionTap}>
