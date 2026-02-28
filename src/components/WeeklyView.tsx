@@ -428,8 +428,8 @@ export function WeeklyView({
 
 							{section.weeks.map((week, weekIdx) => (
 								<>
-									{/* Month number in first row's left cell */}
-									{weekIdx === 0 ? (
+									{/* Month number in last row (aligned with end of month) */}
+									{weekIdx === section.weeks.length - 1 ? (
 										<div
 											key={`mn-${section.monthNum}`}
 											class="monthly-section-month-num"
