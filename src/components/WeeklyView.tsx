@@ -227,7 +227,7 @@ export function WeeklyView({
 				}
 			}
 
-			sections.push({ monthNum: m + 1, weeks, monthLabels });
+			sections.push({ monthNum: m, weeks, monthLabels });
 		}
 		return sections;
 	}, [days, totalDays, startDate, mode, isLandscape]);
@@ -422,8 +422,8 @@ export function WeeklyView({
 
 							{section.weeks.map((week, weekIdx) => (
 								<>
-									{/* Month number in last row (aligned with end of month) */}
-									{weekIdx === section.weeks.length - 1 ? (
+									{/* Month number in first row */}
+									{weekIdx === 0 ? (
 										<div
 											key={`mn-${section.monthNum}`}
 											class="monthly-section-month-num"
