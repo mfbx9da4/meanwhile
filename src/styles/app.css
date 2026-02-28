@@ -703,6 +703,31 @@ body {
 	/* Empty top-left corner */
 }
 
+/* Monthly sections - portrait mode with separate sections per month */
+.monthly-sections {
+	overflow-y: auto;
+	overflow-x: hidden;
+	height: 100%;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+}
+
+.monthly-section {
+	flex-shrink: 0;
+}
+
+.monthly-section-month-num {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	padding-right: 4px;
+	color: var(--color-text-secondary);
+	font-weight: 700;
+}
+
 .weekly-grid-wrapper {
 	display: flex;
 	flex-direction: column;

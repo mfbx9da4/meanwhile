@@ -115,11 +115,25 @@ export function WeeklyView({
 			availableHeight = windowSize.height - padding * 2 - monthLabelHeight;
 			numCols = totalWeeks;
 			numRows = 7;
-		} else {
-			// Portrait: grid has [auto, 7 cells, auto] columns and [auto header, N cell rows]
-			// Account for both side columns (week nums + month labels ~same width)
+		} else if (mode === "monthly") {
+			// Portrait monthly: size cells for a single month section (scrollable)
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
-			// Only subtract dayLabelHeight for header row (month labels are in a column, not row)
+			availableHeight = windowSize.height - padding * 2 - dayLabelHeight;
+			numCols = 7;
+			// Use max weeks per month (~5) instead of totalWeeks for larger cells
+			const totalMonths30 = Math.ceil(totalDays / MONTH_DAYS);
+			let maxWPM = 5;
+			for (let m = 0; m < totalMonths30; m++) {
+				const firstDay = m * MONTH_DAYS;
+				const lastDay = Math.min((m + 1) * MONTH_DAYS - 1, totalDays - 1);
+				const firstWeek = Math.floor((startDayOfWeek + firstDay) / 7);
+				const lastWeek = Math.floor((startDayOfWeek + lastDay) / 7);
+				maxWPM = Math.max(maxWPM, lastWeek - firstWeek + 1);
+			}
+			numRows = maxWPM;
+		} else {
+			// Portrait weekly
+			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
 			availableHeight = windowSize.height - padding * 2 - dayLabelHeight;
 			numCols = 7;
 			numRows = totalWeeks;
@@ -136,7 +150,7 @@ export function WeeklyView({
 			labelSize: Math.max(8, Math.min(11, size * 0.4)),
 			gap: weeklyGridGap,
 		};
-	}, [windowSize, isLandscape, totalWeeks]);
+	}, [windowSize, isLandscape, totalWeeks, mode, totalDays, startDayOfWeek]);
 
 	const weekData = useMemo(() => {
 		const weeks: (DayInfo | null)[][] = [];
@@ -155,6 +169,35 @@ export function WeeklyView({
 		}
 		return weeks;
 	}, [days, totalWeeks, startDayOfWeek, totalDays]);
+
+	const monthSections = useMemo(() => {
+		if (mode !== "monthly" || isLandscape) return [];
+		type MonthSection = {
+			monthNum: number;
+			weekIndices: number[];
+			monthLabels: Map<number, string>;
+		};
+		const sections: MonthSection[] = [];
+		let currentSection: MonthSection | null = null;
+
+		for (let weekIndex = 0; weekIndex < weekLabels.length; weekIndex++) {
+			const label = weekLabels[weekIndex];
+			if (label.month30Num) {
+				currentSection = {
+					monthNum: label.month30Num,
+					weekIndices: [weekIndex],
+					monthLabels: new Map(),
+				};
+				sections.push(currentSection);
+			} else if (currentSection) {
+				currentSection.weekIndices.push(weekIndex);
+			}
+			if (label.month && currentSection) {
+				currentSection.monthLabels.set(weekIndex, label.month);
+			}
+		}
+		return sections;
+	}, [weekLabels, mode, isLandscape]);
 
 	const usedDayLabels = cellSize < 20 ? DAY_LABELS_SHORT : DAY_LABELS;
 
@@ -307,7 +350,94 @@ export function WeeklyView({
 				</div>
 			</div>
 		);
+	} else if (mode === "monthly") {
+		// Portrait monthly: separate sections per month
+		return (
+			<div
+				class="weekly-view portrait monthly-sections"
+				style={{ padding: `${LAYOUT.padding}px` }}
+			>
+				{monthSections.map((section) => (
+					<div key={section.monthNum} class="monthly-section">
+						<div
+							class="weekly-unified-grid"
+							style={{
+								gap: `${gap}px`,
+								fontSize: `${labelSize}px`,
+								gridTemplateColumns: `auto repeat(7, ${cellSize}px) auto`,
+								gridTemplateRows: `auto repeat(${section.weekIndices.length}, ${cellSize}px)`,
+							}}
+						>
+							<div
+								class="monthly-section-month-num"
+								style={{
+									fontSize: `${Math.max(labelSize * 1.8, 16)}px`,
+									viewTransitionName: getMonthNumberTransitionName(
+										section.monthNum,
+									),
+								}}
+							>
+								{section.monthNum}
+							</div>
+							{usedDayLabels.map((label, i) => (
+								<div key={`day-${i}`} class="weekly-day-label">
+									{label}
+								</div>
+							))}
+							<div class="weekly-corner" />
+
+							{section.weekIndices.map((weekIndex) => (
+								<>
+									<div key={`week-${weekIndex}`} class="weekly-week-num" />
+									{weekData[weekIndex].map((day, dayOfWeek) =>
+										day ? (
+											<div
+												key={`${weekIndex}-${dayOfWeek}`}
+												class={`weekly-cell ${day.passed ? "passed" : "future"} ${day.color ? "milestone" : ""} ${day.isUncoloredMilestone || day.color === "subtle" ? "uncolored-milestone" : ""} ${day.isOddWeek ? "odd-week" : "even-week"} ${day.isToday ? "today" : ""} ${selectedDayIndex === day.index ? "selected" : ""} ${highlightedDays.value.indices.has(day.index) ? "highlighted" : ""}`}
+												style={{
+													...(day.isToday
+														? { viewTransitionName: "today-marker" }
+														: {}),
+													...(day.color && day.color !== "subtle"
+														? day.isToday
+															? {
+																	"--day-target-bg": `var(--color-${day.color})`,
+																}
+															: { background: `var(--color-${day.color})` }
+														: {}),
+													...(highlightedDays.value.indices.has(day.index) &&
+													highlightedDays.value.color
+														? {
+																"--highlight-color": `var(--color-${highlightedDays.value.color})`,
+															}
+														: {}),
+												}}
+												onClick={(e) =>
+													onDayClick(e as unknown as MouseEvent, day)
+												}
+											/>
+										) : (
+											<div
+												key={`${weekIndex}-${dayOfWeek}`}
+												class="weekly-cell empty"
+											/>
+										),
+									)}
+									<div
+										key={`month-${weekIndex}`}
+										class="weekly-month-label"
+									>
+										{section.monthLabels.get(weekIndex) || ""}
+									</div>
+								</>
+							))}
+						</div>
+					</div>
+				))}
+			</div>
+		);
 	} else {
+		// Portrait weekly
 		const monthByWeek = new Map(
 			weekLabels.filter((l) => l.month).map((l) => [l.position, l.month]),
 		);
@@ -340,19 +470,12 @@ export function WeeklyView({
 								key={`week-${weekIndex}`}
 								class="weekly-week-num"
 								style={{
-									viewTransitionName:
-										mode === "monthly" && weekLabels[weekIndex]?.month30Num
-											? getMonthNumberTransitionName(
-													weekLabels[weekIndex].month30Num!,
-												)
-											: mode === "weekly"
-												? getWeekNumberTransitionName(weekIndex + 1)
-												: undefined,
+									viewTransitionName: getWeekNumberTransitionName(
+										weekIndex + 1,
+									),
 								}}
 							>
-								{mode === "monthly"
-									? (weekLabels[weekIndex]?.month30Num ?? "")
-									: weekIndex + 1}
+								{weekIndex + 1}
 							</div>
 							{week.map((day, dayOfWeek) =>
 								day ? (
@@ -365,7 +488,9 @@ export function WeeklyView({
 												: {}),
 											...(day.color && day.color !== "subtle"
 												? day.isToday
-													? { "--day-target-bg": `var(--color-${day.color})` }
+													? {
+															"--day-target-bg": `var(--color-${day.color})`,
+														}
 													: { background: `var(--color-${day.color})` }
 												: {}),
 											...(highlightedDays.value.indices.has(day.index) &&
@@ -375,7 +500,9 @@ export function WeeklyView({
 													}
 												: {}),
 										}}
-										onClick={(e) => onDayClick(e as unknown as MouseEvent, day)}
+										onClick={(e) =>
+											onDayClick(e as unknown as MouseEvent, day)
+										}
 									/>
 								) : (
 									<div

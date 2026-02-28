@@ -390,6 +390,7 @@ export function App() {
 					dueDate={CONFIG.dueDate}
 					annotationEmojis={annotationEmojis}
 					annotationDescriptions={annotationDescriptions}
+					viewMode={viewMode}
 				/>
 			)}
 			{showConfigEditor && (
