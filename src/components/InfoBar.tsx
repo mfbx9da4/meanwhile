@@ -151,8 +151,8 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 	const weeksRemaining = Math.floor(daysRemaining / 7);
 	const extraDaysWeek = daysRemaining % 7;
 
-	// Monthly calculations
-	const currentMonth = Math.floor(daysElapsed / MONTH_DAYS) + 1;
+	// Monthly calculations (completed months + days into current)
+	const currentMonth = Math.floor(daysElapsed / MONTH_DAYS);
 	const currentDayInMonth = daysElapsed % MONTH_DAYS;
 	const monthsRemaining = Math.floor(daysRemaining / MONTH_DAYS);
 	const extraDaysMonth = daysRemaining % MONTH_DAYS;
