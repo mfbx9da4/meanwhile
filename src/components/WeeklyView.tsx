@@ -123,7 +123,7 @@ export function WeeklyView({
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
 			numCols = 7;
 			const numMonths = Math.ceil(totalDays / MONTH_DAYS);
-			const sectionGap = 4; // matches CSS .monthly-sections gap
+			const sectionGap = 8; // matches CSS .monthly-sections gap
 			// Count total week rows across all per-month grids
 			let totalMonthWeeks = 0;
 			for (let m = 0; m < numMonths; m++) {
