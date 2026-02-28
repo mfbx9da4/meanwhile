@@ -117,18 +117,34 @@ export function WeeklyView({
 			numRows = 7;
 		} else if (mode === "monthly") {
 			// Portrait monthly: all sections must fit on screen (no scroll)
+			// Each month has its own grid starting on its own day-of-week
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
 			numCols = 7;
 			const numMonths = Math.ceil(totalDays / MONTH_DAYS);
-			const sectionGap = 16; // matches CSS .monthly-sections gap
-			// Subtract overhead: headers per section + gaps between sections + rounding buffer
+			const sectionGap = 4; // matches CSS .monthly-sections gap
+			// Count total week rows across all per-month grids
+			let totalMonthWeeks = 0;
+			for (let m = 0; m < numMonths; m++) {
+				const monthStartDay = m * MONTH_DAYS;
+				const monthEndDay = Math.min(
+					(m + 1) * MONTH_DAYS - 1,
+					totalDays - 1,
+				);
+				const monthDayCount = monthEndDay - monthStartDay + 1;
+				const monthStartDow = addDays(startDate, monthStartDay).getDay();
+				totalMonthWeeks += Math.ceil(
+					(monthStartDow + monthDayCount) / 7,
+				);
+			}
+			// Subtract overhead: headers + gaps between sections + intra-grid header gaps
+			const headerHeight = 16; // auto-sized month num header row
 			availableHeight =
 				windowSize.height -
 				padding * 2 -
-				dayLabelHeight * numMonths -
+				headerHeight * numMonths -
 				sectionGap * (numMonths - 1) -
-				numMonths; // 1px buffer per section for rounding
-			numRows = totalWeeks;
+				weeklyGridGap * numMonths; // gap between header row and first cell row in each section
+			numRows = totalMonthWeeks;
 		} else {
 			// Portrait weekly
 			availableWidth = windowSize.width - padding * 2 - weekLabelWidth * 2;
@@ -171,32 +187,53 @@ export function WeeklyView({
 
 	const monthSections = useMemo(() => {
 		if (mode !== "monthly" || isLandscape) return [];
-		type MonthSection = {
+		const numMonths = Math.ceil(totalDays / MONTH_DAYS);
+		const sections: {
 			monthNum: number;
-			weekIndices: number[];
+			weeks: (DayInfo | null)[][];
 			monthLabels: Map<number, string>;
-		};
-		const sections: MonthSection[] = [];
-		let currentSection: MonthSection | null = null;
+		}[] = [];
 
-		for (let weekIndex = 0; weekIndex < weekLabels.length; weekIndex++) {
-			const label = weekLabels[weekIndex];
-			if (label.month30Num) {
-				currentSection = {
-					monthNum: label.month30Num,
-					weekIndices: [weekIndex],
-					monthLabels: new Map(),
-				};
-				sections.push(currentSection);
-			} else if (currentSection) {
-				currentSection.weekIndices.push(weekIndex);
+		for (let m = 0; m < numMonths; m++) {
+			const monthStartDay = m * MONTH_DAYS;
+			const monthEndDay = Math.min((m + 1) * MONTH_DAYS - 1, totalDays - 1);
+			const monthDayCount = monthEndDay - monthStartDay + 1;
+			const monthStartDow = addDays(startDate, monthStartDay).getDay();
+			const numWeeks = Math.ceil((monthStartDow + monthDayCount) / 7);
+
+			const weeks: (DayInfo | null)[][] = [];
+			for (let week = 0; week < numWeeks; week++) {
+				const weekDays: (DayInfo | null)[] = [];
+				for (let dow = 0; dow < 7; dow++) {
+					const dayInMonth = week * 7 + dow - monthStartDow;
+					const dayIndex = monthStartDay + dayInMonth;
+					if (dayInMonth >= 0 && dayInMonth < monthDayCount && dayIndex < totalDays) {
+						weekDays.push(days[dayIndex]);
+					} else {
+						weekDays.push(null);
+					}
+				}
+				weeks.push(weekDays);
 			}
-			if (label.month && currentSection) {
-				currentSection.monthLabels.set(weekIndex, label.month);
+
+			// Calendar month labels for this section
+			const monthLabels = new Map<number, string>();
+			let lastCalMonth = -1;
+			for (let d = monthStartDay; d <= monthEndDay; d++) {
+				const calMonth = addDays(startDate, d).getMonth();
+				if (calMonth !== lastCalMonth) {
+					const weekInSection = Math.floor((monthStartDow + d - monthStartDay) / 7);
+					if (!monthLabels.has(weekInSection)) {
+						monthLabels.set(weekInSection, MONTHS[calMonth]);
+					}
+					lastCalMonth = calMonth;
+				}
 			}
+
+			sections.push({ monthNum: m + 1, weeks, monthLabels });
 		}
 		return sections;
-	}, [weekLabels, mode, isLandscape]);
+	}, [days, totalDays, startDate, mode, isLandscape]);
 
 	const usedDayLabels = cellSize < 20 ? DAY_LABELS_SHORT : DAY_LABELS;
 
@@ -350,7 +387,7 @@ export function WeeklyView({
 			</div>
 		);
 	} else if (mode === "monthly") {
-		// Portrait monthly: separate sections per month
+		// Portrait monthly: separate sections per month, each with its own grid
 		return (
 			<div
 				class="weekly-view portrait monthly-sections"
@@ -364,7 +401,7 @@ export function WeeklyView({
 								gap: `${gap}px`,
 								fontSize: `${labelSize}px`,
 								gridTemplateColumns: `auto repeat(7, ${cellSize}px) auto`,
-								gridTemplateRows: `auto repeat(${section.weekIndices.length}, ${cellSize}px)`,
+								gridTemplateRows: `auto repeat(${section.weeks.length}, ${cellSize}px)`,
 							}}
 						>
 							<div
@@ -385,13 +422,13 @@ export function WeeklyView({
 							))}
 							<div class="weekly-corner" />
 
-							{section.weekIndices.map((weekIndex) => (
+							{section.weeks.map((week, weekIdx) => (
 								<>
-									<div key={`week-${weekIndex}`} class="weekly-week-num" />
-									{weekData[weekIndex].map((day, dayOfWeek) =>
+									<div key={`wn-${weekIdx}`} class="weekly-week-num" />
+									{week.map((day, dayOfWeek) =>
 										day ? (
 											<div
-												key={`${weekIndex}-${dayOfWeek}`}
+												key={`${weekIdx}-${dayOfWeek}`}
 												class={`weekly-cell ${day.passed ? "passed" : "future"} ${day.color ? "milestone" : ""} ${day.isUncoloredMilestone || day.color === "subtle" ? "uncolored-milestone" : ""} ${day.isOddWeek ? "odd-week" : "even-week"} ${day.isToday ? "today" : ""} ${selectedDayIndex === day.index ? "selected" : ""} ${highlightedDays.value.indices.has(day.index) ? "highlighted" : ""}`}
 												style={{
 													...(day.isToday
@@ -417,16 +454,16 @@ export function WeeklyView({
 											/>
 										) : (
 											<div
-												key={`${weekIndex}-${dayOfWeek}`}
+												key={`${weekIdx}-${dayOfWeek}`}
 												class="weekly-cell empty"
 											/>
 										),
 									)}
 									<div
-										key={`month-${weekIndex}`}
+										key={`month-${weekIdx}`}
 										class="weekly-month-label"
 									>
-										{section.monthLabels.get(weekIndex) || ""}
+										{section.monthLabels.get(weekIdx) || ""}
 									</div>
 								</>
 							))}
