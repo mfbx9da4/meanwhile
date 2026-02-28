@@ -152,7 +152,7 @@ export function Tooltip({
 				<div class="tooltip-date">{fullDate}</div>
 				<div class="tooltip-week">
 					{viewMode === "monthly"
-						? `Month ${monthNum}${dayInMonth > 0 ? ` + ${dayInMonth}` : ""}`
+						? `Month ${(monthNum + dayInMonth / (getMonthStart(monthNum + 1, totalDays) - getMonthStart(monthNum, totalDays))).toFixed(2)}`
 						: `Week ${weekNum}${dayOffset > 0 ? ` + ${dayOffset}` : ""}`}
 				</div>
 				{day.annotation && (

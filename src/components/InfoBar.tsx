@@ -151,9 +151,11 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 	const weeksRemaining = Math.floor(daysRemaining / 7);
 	const extraDaysWeek = daysRemaining % 7;
 
-	// Monthly calculations (completed months + days into current)
+	// Monthly calculations (completed months + fractional progress)
 	const currentMonth = getMonthForDay(daysElapsed, totalDays);
 	const currentDayInMonth = daysElapsed - getMonthStart(currentMonth, totalDays);
+	const monthLength = getMonthStart(currentMonth + 1, totalDays) - getMonthStart(currentMonth, totalDays);
+	const fractionalMonth = currentMonth + currentDayInMonth / monthLength;
 	const monthsRemaining = NUM_MONTHS - 1 - currentMonth;
 	const daysLeftInCurrentMonth = getMonthStart(currentMonth + 1, totalDays) - daysElapsed;
 	const extraDaysMonth = monthsRemaining > 0 ? daysLeftInCurrentMonth : daysRemaining;
@@ -184,16 +186,10 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 			</button>
 			<span class="info-text">
 				<span class="info-full">
-					{isMonthly ? "Month" : "Week"} {isMonthly ? currentMonth : currentWeek}
-					{(isMonthly ? currentDayInMonth : currentDayInWeek) > 0
-						? ` + ${isMonthly ? currentDayInMonth : currentDayInWeek}`
-						: ""}
+					{isMonthly ? `Month ${fractionalMonth.toFixed(2)}` : `Week ${currentWeek}${currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}`}
 				</span>
 				<span class="info-compact">
-					{isMonthly ? "Mo" : "Wk"} {isMonthly ? currentMonth : currentWeek}
-					{(isMonthly ? currentDayInMonth : currentDayInWeek) > 0
-						? ` + ${isMonthly ? currentDayInMonth : currentDayInWeek}`
-						: ""}
+					{isMonthly ? `Mo ${fractionalMonth.toFixed(2)}` : `Wk ${currentWeek}${currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}`}
 				</span>
 			</span>
 			<span class="info-text" onClick={handleVersionTap}>
