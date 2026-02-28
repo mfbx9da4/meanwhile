@@ -186,10 +186,10 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 			</button>
 			<span class="info-text">
 				<span class="info-full">
-					{isMonthly ? `Month ${fractionalMonth.toFixed(2)}` : `Week ${currentWeek}${currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}`}
+					{isMonthly ? `Month ${currentDayInMonth > 0 ? fractionalMonth.toFixed(2) : currentMonth}` : `Week ${currentWeek}${currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}`}
 				</span>
 				<span class="info-compact">
-					{isMonthly ? `Mo ${fractionalMonth.toFixed(2)}` : `Wk ${currentWeek}${currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}`}
+					{isMonthly ? `Mo ${currentDayInMonth > 0 ? fractionalMonth.toFixed(2) : currentMonth}` : `Wk ${currentWeek}${currentDayInWeek > 0 ? ` + ${currentDayInWeek}` : ""}`}
 				</span>
 			</span>
 			<span class="info-text" onClick={handleVersionTap}>
