@@ -278,7 +278,13 @@ export function WeeklyView({
 		return (
 			<div
 				class="weekly-view portrait"
-				style={{ padding: `${LAYOUT.padding}px` }}
+				style={{
+					padding: `${LAYOUT.padding}px`,
+					height: "100%",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
 			>
 				<div
 					class="weekly-unified-grid"
