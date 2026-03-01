@@ -18,8 +18,8 @@ const MONTHS = [
 	"Dec",
 ];
 
-const DAY_LABELS_MON = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DAY_LABELS_MON_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_LABELS_SHORT = ["S", "M", "T", "W", "T", "F", "S"];
 
 function addDays(date: Date, days: number): Date {
 	const result = new Date(date);
@@ -57,9 +57,8 @@ export function MonthlyView({
 			const monthStartDay = getMonthStart(m, totalDays);
 			const monthEndDay = getMonthStart(m + 1, totalDays) - 1;
 			const monthDayCount = monthEndDay - monthStartDay + 1;
-			// Monday-based: (getDay() + 6) % 7 gives 0=Mon, 6=Sun
-			const monthStartDow =
-				(addDays(startDate, monthStartDay).getDay() + 6) % 7;
+			// Sunday-based: getDay() gives 0=Sun, 6=Sat
+			const monthStartDow = addDays(startDate, monthStartDay).getDay();
 			const numWeeks = Math.ceil((monthStartDow + monthDayCount) / 7);
 
 			const weeks: (DayInfo | null)[][] = [];
@@ -178,8 +177,7 @@ export function MonthlyView({
 		}
 	}, [windowSize, isLandscape, monthSections, maxWeeks]);
 
-	const usedDayLabelsMon =
-		cellSize < 20 ? DAY_LABELS_MON_SHORT : DAY_LABELS_MON;
+	const usedDayLabels = cellSize < 20 ? DAY_LABELS_SHORT : DAY_LABELS;
 
 	const getMonthNumberTransitionName = (monthNum: number) =>
 		`month-number-${monthNum}`;
@@ -205,7 +203,7 @@ export function MonthlyView({
 					class="landscape-monthly-wrapper"
 					style={{ gap: `${sectionGap}px` }}
 				>
-					{/* Day labels column (Mon-Sun) */}
+					{/* Day labels column (Sun-Sat) */}
 					<div
 						class="weekly-day-labels"
 						style={{
@@ -214,7 +212,7 @@ export function MonthlyView({
 							width: `${dayLabelColWidth}px`,
 						}}
 					>
-						{usedDayLabelsMon.map((label, i) => (
+						{usedDayLabels.map((label, i) => (
 							<span
 								key={i}
 								class="weekly-day-label"
@@ -364,7 +362,7 @@ export function MonthlyView({
 						{sectionIdx === 0 && (
 							<>
 								<div class="weekly-corner" />
-								{usedDayLabelsMon.map((label, i) => (
+								{usedDayLabels.map((label, i) => (
 									<div key={`day-${i}`} class="weekly-day-label">
 										{label}
 									</div>
