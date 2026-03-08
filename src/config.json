@@ -43,7 +43,7 @@
 			"emoji": "🎂",
 			"color": "subtle"
 		},
-{
+		{
 			"date": "2026-01-20",
 			"label": "First Midwife Appointment",
 			"emoji": "🤱",
@@ -110,7 +110,7 @@
 			"color": "salmon"
 		},
 		{
-			"date": "2026-03-10",
+			"date": "2026-03-08",
 			"label": "James' Baby Due",
 			"emoji": "🐣",
 			"color": "purple"
@@ -220,7 +220,7 @@
 			"date": "2026-08-16",
 			"label": "Due",
 			"emoji": "🐣",
-			"color": "purple"
+			"color": "red"
 		}
 	]
 }
