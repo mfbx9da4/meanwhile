@@ -7,7 +7,7 @@
 			"date": "2025-11-09",
 			"label": "Start",
 			"emoji": "🌱",
-			"color": "orange",
+			"color": "red",
 			"description": "Start of first trimester"
 		},
 		{
@@ -85,7 +85,7 @@
 			"date": "2026-02-08",
 			"label": "Announce!",
 			"emoji": "📢",
-			"color": "orange",
+			"color": "red",
 			"description": "Start of second trimester"
 		},
 		{
@@ -182,7 +182,7 @@
 			"date": "2026-05-24",
 			"label": "Third Trimester",
 			"emoji": "🤰",
-			"color": "orange",
+			"color": "red",
 			"description": "Start of third trimester"
 		},
 		{
