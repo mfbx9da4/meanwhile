@@ -306,7 +306,7 @@ export function App() {
 	const days = useMemo(() => {
 		return Array.from({ length: totalDays }, (_, i) => {
 			const date = addDays(CONFIG.startDate, i);
-			const weekNum = Math.floor(i / 7) + 1;
+			const weekNum = Math.floor(i / 7);
 			const milestone = milestoneLookup[i];
 			const isToday = i === daysPassed - 1;
 

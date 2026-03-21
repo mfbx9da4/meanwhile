@@ -146,7 +146,7 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 	const isMonthly = viewMode === "monthly";
 
 	// Weekly calculations
-	const currentWeek = Math.floor(daysElapsed / 7) + 1;
+	const currentWeek = Math.floor(daysElapsed / 7);
 	const currentDayInWeek = daysElapsed % 7;
 	const weeksRemaining = Math.floor(daysRemaining / 7);
 	const extraDaysWeek = daysRemaining % 7;

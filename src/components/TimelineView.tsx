@@ -115,11 +115,11 @@ export function TimelineView({
 		return markers;
 	}, [totalDays, startDate]);
 
-	// Get week markers (pregnancy weeks 1-40)
+	// Get week markers (pregnancy weeks 0-40)
 	const weekMarkers = useMemo((): WeekMarker[] => {
 		const markers: WeekMarker[] = [];
 		for (let i = 0; i < totalDays; i += 7) {
-			const weekNum = Math.floor(i / 7) + 1;
+			const weekNum = Math.floor(i / 7);
 			markers.push({
 				week: weekNum,
 				position: (i / totalDays) * 100,

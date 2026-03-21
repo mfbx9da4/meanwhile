@@ -106,7 +106,7 @@ export function Tooltip({
 	totalDays,
 }: TooltipProps) {
 	const date = addDays(startDate, day.index);
-	const weekNum = Math.floor(day.index / 7) + 1;
+	const weekNum = Math.floor(day.index / 7);
 	const dayOffset = day.index % 7;
 	const monthNum = getMonthForDay(day.index, totalDays);
 	const dayInMonth = day.index - getMonthStart(monthNum, totalDays);
