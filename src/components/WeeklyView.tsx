@@ -71,7 +71,7 @@ export function WeeklyView({
 		}[] = [];
 		for (let week = 0; week < totalWeeks; week++) {
 			labels.push({
-				weekNum: week + 1,
+				weekNum: week,
 				month: monthStartsInWeek.get(week),
 				position: week,
 			});
@@ -310,11 +310,11 @@ export function WeeklyView({
 								class="weekly-week-num"
 								style={{
 									viewTransitionName: getWeekNumberTransitionName(
-										weekIndex + 1,
+										weekIndex,
 									),
 								}}
 							>
-								{weekIndex + 1}
+								{weekIndex}
 							</div>
 							{week.map((day, dayOfWeek) =>
 								day ? (

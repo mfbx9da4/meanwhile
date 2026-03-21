@@ -1,10 +1,10 @@
 {
-	"startDate": "2025-11-16",
+	"startDate": "2025-11-09",
 	"dueDate": "2026-08-16",
 	"todayEmoji": "📍",
 	"milestones": [
 		{
-			"date": "2025-11-16",
+			"date": "2025-11-09",
 			"label": "Start",
 			"emoji": "🌱",
 			"color": "orange",
