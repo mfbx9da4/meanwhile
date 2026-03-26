@@ -124,18 +124,18 @@
 			"description": "15 - 20 Mar"
 		},
 		{
+			"date": "2026-03-25",
+			"label": "Vishal's Baby Due",
+			"emoji": "🐣",
+			"color": "purple"
+		},
+		{
 			"date": "2026-03-28",
 			"endDate": "2026-04-13",
 			"label": "Easter Holidays",
 			"emoji": "🏝️",
 			"color": "subtle",
 			"description": "School resumes 14 Apr"
-		},
-		{
-			"date": "2026-03-29",
-			"label": "Vishal's Baby Due",
-			"emoji": "🐣",
-			"color": "purple"
 		},
 		{
 			"date": "2026-04-01",
