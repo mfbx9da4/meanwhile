@@ -145,6 +145,13 @@
 			"description": "Anatomy scan"
 		},
 		{
+			"date": "2026-04-26",
+			"label": "Exchange on New House",
+			"emoji": "🏠",
+			"color": "gold",
+			"description": "House purchase exchange"
+		},
+		{
 			"date": "2026-04-12",
 			"label": "Engagement Party",
 			"emoji": "🎉",
@@ -196,6 +203,12 @@
 			"label": "Dan & Bex Wedding",
 			"emoji": "💒",
 			"color": "pink"
+		},
+		{
+			"date": "2026-06-19",
+			"label": "Move into New House",
+			"emoji": "🚛",
+			"color": "gold"
 		},
 		{
 			"date": "2026-07-01",
