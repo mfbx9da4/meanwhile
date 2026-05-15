@@ -205,6 +205,13 @@
 			"color": "pink"
 		},
 		{
+			"date": "2026-06-09",
+			"label": "New House Complete",
+			"emoji": "🏡",
+			"color": "gold",
+			"description": "House completion date"
+		},
+		{
 			"date": "2026-06-19",
 			"label": "Move into New House",
 			"emoji": "🚛",
