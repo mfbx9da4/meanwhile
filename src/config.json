@@ -152,16 +152,16 @@
 			"description": "House purchase exchange"
 		},
 		{
+			"date": "2026-05-06",
+			"label": "Seb's Baby Due",
+			"emoji": "🐣",
+			"color": "purple"
+		},
+		{
 			"date": "2026-04-12",
 			"label": "Engagement Party",
 			"emoji": "🎉",
 			"color": "pink"
-		},
-		{
-			"date": "2026-04-26",
-			"label": "Seb's Baby Due",
-			"emoji": "🐣",
-			"color": "purple"
 		},
 		{
 			"date": "2026-05-08",
