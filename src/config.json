@@ -218,6 +218,12 @@
 			"color": "gold"
 		},
 		{
+			"date": "2026-06-26",
+			"label": "Last Day of School",
+			"emoji": "🏫",
+			"color": "subtle"
+		},
+		{
 			"date": "2026-07-01",
 			"label": "Kry's Baby Due",
 			"emoji": "🐣",
