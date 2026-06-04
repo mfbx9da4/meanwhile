@@ -6,7 +6,7 @@ import {
 	useMemo,
 } from "preact/hooks";
 import { haptic } from "ios-haptics";
-import { getMonthStart, getMonthForDay } from "../constants";
+import { NUM_MONTHS, getMonthStart, getMonthForDay } from "../constants";
 
 // Grid positions for 3x3 grid
 const GRID_POSITIONS = [
@@ -131,13 +131,18 @@ function formatTimeRemaining(
 	const daysRemaining = Math.max(0, targetIndex - daysElapsed);
 
 	if (isMonthly) {
-		const currentMonth = getMonthForDay(daysElapsed, totalDays);
-		const targetMonth = getMonthForDay(targetIndex, totalDays);
-		const monthsRemaining = targetMonth - currentMonth;
-		const daysLeftInCurrentMonth =
-			getMonthStart(currentMonth + 1, totalDays) - daysElapsed;
-		const extraDays =
-			monthsRemaining > 0 ? daysLeftInCurrentMonth : daysRemaining;
+		// Decompose the days remaining to *this* target into pregnancy months +
+		// days. Pregnancy months are equal divisions of the timeline, so a single
+		// average length keeps the due-date and C-section countdowns distinct
+		// (they fall a few days apart, inside the same pregnancy month).
+		const avgMonthLength = totalDays / NUM_MONTHS;
+		let monthsRemaining = Math.floor(daysRemaining / avgMonthLength);
+		let extraDays = Math.round(daysRemaining - monthsRemaining * avgMonthLength);
+		// Guard against rounding pushing the remainder up to a full month.
+		if (extraDays >= Math.round(avgMonthLength)) {
+			monthsRemaining += 1;
+			extraDays = 0;
+		}
 		return {
 			full:
 				monthsRemaining > 0
