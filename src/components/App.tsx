@@ -297,6 +297,16 @@ export function App() {
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
 
+	// 0-based day index of the C-section milestone (used for its countdown)
+	const cSectionDayIndex = useMemo(() => {
+		const cSection = CONFIG.milestones.find((m) =>
+			/c[\s-]?section|caesarean|cesarean/i.test(m.label),
+		);
+		return cSection
+			? getDaysBetween(CONFIG.startDate, cSection.date)
+			: undefined;
+	}, []);
+
 	const totalDays = getDaysBetween(CONFIG.startDate, CONFIG.dueDate) + 1;
 	const daysPassed = Math.max(
 		0,
@@ -389,6 +399,7 @@ export function App() {
 				viewMode={viewMode}
 				onToggleView={toggleViewMode}
 				onOpenConfigEditor={() => setShowConfigEditor(true)}
+				cSectionDayIndex={cSectionDayIndex}
 			/>
 			{tooltip && (
 				<Tooltip

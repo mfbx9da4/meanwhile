@@ -6,7 +6,7 @@ import {
 	useMemo,
 } from "preact/hooks";
 import { haptic } from "ios-haptics";
-import { NUM_MONTHS, getMonthStart, getMonthForDay } from "../constants";
+import { getMonthStart, getMonthForDay } from "../constants";
 
 // Grid positions for 3x3 grid
 const GRID_POSITIONS = [
@@ -113,10 +113,59 @@ type InfoBarProps = {
 	viewMode: ViewMode;
 	onToggleView: () => void;
 	onOpenConfigEditor?: () => void;
+	// 0-based day index of the C-section, relative to the start date.
+	// When omitted (or already passed) the C-section countdown is hidden.
+	cSectionDayIndex?: number;
 };
 
+// Format the time remaining until a target day, matching the active view:
+// weekly/timeline counts down in weeks + days, monthly in pregnancy months + days.
+function formatTimeRemaining(
+	daysElapsed: number,
+	targetIndex: number,
+	totalDays: number,
+	isMonthly: boolean,
+	prefix: string,
+	compactPrefix: string,
+): { full: string; compact: string } {
+	const daysRemaining = Math.max(0, targetIndex - daysElapsed);
 
-export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenConfigEditor }: InfoBarProps) {
+	if (isMonthly) {
+		const currentMonth = getMonthForDay(daysElapsed, totalDays);
+		const targetMonth = getMonthForDay(targetIndex, totalDays);
+		const monthsRemaining = targetMonth - currentMonth;
+		const daysLeftInCurrentMonth =
+			getMonthStart(currentMonth + 1, totalDays) - daysElapsed;
+		const extraDays =
+			monthsRemaining > 0 ? daysLeftInCurrentMonth : daysRemaining;
+		return {
+			full:
+				monthsRemaining > 0
+					? `${prefix} ${monthsRemaining} month${monthsRemaining !== 1 ? "s" : ""}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? "s" : ""}` : ""}`
+					: `${prefix} ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`,
+			compact:
+				monthsRemaining > 0
+					? `${compactPrefix} ${monthsRemaining}mo${extraDays > 0 ? ` ${extraDays}d` : ""}`
+					: `${compactPrefix} ${daysRemaining}d`,
+		};
+	}
+
+	const weeksRemaining = Math.floor(daysRemaining / 7);
+	const extraDays = daysRemaining % 7;
+	return {
+		full:
+			weeksRemaining > 0
+				? `${prefix} ${weeksRemaining} week${weeksRemaining !== 1 ? "s" : ""}${extraDays > 0 ? ` and ${extraDays} day${extraDays !== 1 ? "s" : ""}` : ""}`
+				: `${prefix} ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`,
+		compact:
+			weeksRemaining > 0
+				? `${compactPrefix} ${weeksRemaining}w${extraDays > 0 ? ` ${extraDays}d` : ""}`
+				: `${compactPrefix} ${daysRemaining}d`,
+	};
+}
+
+
+export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenConfigEditor, cSectionDayIndex }: InfoBarProps) {
 	const [showVersion, setShowVersion] = useState(false);
 	const [editUnlocked, setEditUnlocked] = useState(false);
 	const [shuffleKey, setShuffleKey] = useState(0);
@@ -140,7 +189,6 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 		}
 	}, [onToggleView]);
 
-	const daysRemaining = totalDays - daysPassed;
 	const daysElapsed = Math.max(0, daysPassed - 1);
 	const progressPercent = ((daysPassed / totalDays) * 100).toFixed(1);
 	const isMonthly = viewMode === "monthly";
@@ -148,32 +196,36 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 	// Weekly calculations
 	const currentWeek = Math.floor(daysElapsed / 7);
 	const currentDayInWeek = daysElapsed % 7;
-	const weeksRemaining = Math.floor(daysRemaining / 7);
-	const extraDaysWeek = daysRemaining % 7;
 
 	// Monthly calculations (completed months + fractional progress)
 	const currentMonth = getMonthForDay(daysElapsed, totalDays);
 	const currentDayInMonth = daysElapsed - getMonthStart(currentMonth, totalDays);
 	const monthLength = getMonthStart(currentMonth + 1, totalDays) - getMonthStart(currentMonth, totalDays);
 	const fractionalMonth = currentMonth + currentDayInMonth / monthLength;
-	const monthsRemaining = NUM_MONTHS - 1 - currentMonth;
-	const daysLeftInCurrentMonth = getMonthStart(currentMonth + 1, totalDays) - daysElapsed;
-	const extraDaysMonth = monthsRemaining > 0 ? daysLeftInCurrentMonth : daysRemaining;
 
-	const timeRemaining = isMonthly
-		? monthsRemaining > 0
-			? `Due in ${monthsRemaining} month${monthsRemaining !== 1 ? "s" : ""}${extraDaysMonth > 0 ? ` and ${extraDaysMonth} day${extraDaysMonth !== 1 ? "s" : ""}` : ""}`
-			: `Due in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`
-		: weeksRemaining > 0
-			? `Due in ${weeksRemaining} week${weeksRemaining !== 1 ? "s" : ""}${extraDaysWeek > 0 ? ` and ${extraDaysWeek} day${extraDaysWeek !== 1 ? "s" : ""}` : ""}`
-			: `Due in ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`;
-	const timeRemainingCompact = isMonthly
-		? monthsRemaining > 0
-			? `Due in ${monthsRemaining}mo${extraDaysMonth > 0 ? ` ${extraDaysMonth}d` : ""}`
-			: `Due in ${daysRemaining}d`
-		: weeksRemaining > 0
-			? `Due in ${weeksRemaining}w${extraDaysWeek > 0 ? ` ${extraDaysWeek}d` : ""}`
-			: `Due in ${daysRemaining}d`;
+	// Countdown to the due date (last day of the timeline)
+	const dueCountdown = formatTimeRemaining(
+		daysElapsed,
+		totalDays - 1,
+		totalDays,
+		isMonthly,
+		"Due in",
+		"Due in",
+	);
+
+	// Countdown to the C-section, shown until the date has passed
+	const showCSection =
+		cSectionDayIndex !== undefined && cSectionDayIndex >= daysElapsed;
+	const cSectionCountdown = showCSection
+		? formatTimeRemaining(
+				daysElapsed,
+				cSectionDayIndex,
+				totalDays,
+				isMonthly,
+				"C-section in",
+				"C-sec in",
+			)
+		: null;
 
 	return (
 		<div class="info">
@@ -196,9 +248,15 @@ export function InfoBar({ totalDays, daysPassed, viewMode, onToggleView, onOpenC
 				{progressPercent}%
 			</span>
 			<span class="info-text">
-				<span class="info-full">{timeRemaining}</span>
-				<span class="info-compact">{timeRemainingCompact}</span>
+				<span class="info-full">{dueCountdown.full}</span>
+				<span class="info-compact">{dueCountdown.compact}</span>
 			</span>
+			{cSectionCountdown && (
+				<span class="info-text">
+					<span class="info-full">{cSectionCountdown.full}</span>
+					<span class="info-compact">{cSectionCountdown.compact}</span>
+				</span>
+			)}
 			{onOpenConfigEditor && editUnlocked && (
 				<button
 					class="view-toggle"
