@@ -145,6 +145,13 @@
 			"description": "Anatomy scan"
 		},
 		{
+			"date": "2026-04-03",
+			"label": "First Kicks!",
+			"emoji": "🦶",
+			"color": "blue",
+			"description": "20.5 weeks - first noticeable baby movements"
+		},
+		{
 			"date": "2026-04-26",
 			"label": "Exchange on New House",
 			"emoji": "🏠",
@@ -246,7 +253,7 @@
 			"date": "2026-08-16",
 			"label": "Due",
 			"emoji": "🐣",
-			"color": "purple"
+			"color": "red"
 		}
 	]
 }
