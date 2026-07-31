@@ -152,6 +152,12 @@
 			"description": "20.5 weeks - first noticeable baby movements"
 		},
 		{
+			"date": "2026-04-12",
+			"label": "Engagement Party",
+			"emoji": "🎉",
+			"color": "pink"
+		},
+		{
 			"date": "2026-04-26",
 			"label": "Exchange on New House",
 			"emoji": "🏠",
@@ -165,12 +171,6 @@
 			"color": "purple"
 		},
 		{
-			"date": "2026-04-12",
-			"label": "Engagement Party",
-			"emoji": "🎉",
-			"color": "pink"
-		},
-		{
 			"date": "2026-05-08",
 			"endDate": "2026-05-11",
 			"label": "Daniel's Stag",
@@ -179,18 +179,18 @@
 			"description": "8 - 11 May"
 		},
 		{
-			"date": "2026-05-23",
-			"label": "Charlie's Wedding",
-			"emoji": "💒",
-			"color": "pink"
-		},
-		{
 			"date": "2026-05-22",
 			"endDate": "2026-05-27",
 			"label": "May Half Term",
 			"emoji": "🏝️",
 			"color": "subtle",
 			"description": "School resumes 28 May"
+		},
+		{
+			"date": "2026-05-23",
+			"label": "Charlie's Wedding",
+			"emoji": "💒",
+			"color": "pink"
 		},
 		{
 			"date": "2026-05-24",
@@ -241,6 +241,13 @@
 			"label": "Anakha's Wedding",
 			"emoji": "💒",
 			"color": "pink"
+		},
+		{
+			"date": "2026-08-06",
+		"label": "Pre-op Appointment",
+		"emoji": "🏥",
+		"color": "salmon",
+		"description": "Pre-operative appointment"
 		},
 		{
 			"date": "2026-08-09",
